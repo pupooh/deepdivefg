@@ -7,6 +7,7 @@ namespace Bga\Games\DeepDiveFG\States;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\Games\DeepDiveFG\Game;
+use Bga\Games\DeepDiveFG\OceanTile;
 
 const ST_END_GAME = 99;
 
@@ -32,11 +33,11 @@ class EndScore extends GameState
         if ($isSoloMode) {
             $difficulty = (int) $this->globals->get('soloDifficulty', 1);
             $aiScoreData = $this->game->computePlayerScore(AiTurn::AI_PLAYER_ID);
-            $aiRockCount = (int) $this->game->getUniqueValueFromDB(
-                "SELECT COUNT(*) FROM `ocean_tile` WHERE `owner_id` = " . AiTurn::AI_PLAYER_ID . " AND `location` = 'rock'"
-            );
-            $aiOpenWaterCount = (int) $this->game->getUniqueValueFromDB(
-                "SELECT COUNT(*) FROM `ocean_tile` WHERE `owner_id` = " . AiTurn::AI_PLAYER_ID . " AND `location` = 'tableau' AND `category` = 'open_water'"
+            $aiRockCount = $this->game->tileManager->countPlayerTiles(AiTurn::AI_PLAYER_ID, OceanTile::LOCATION_ROCK);
+            $aiOpenWaterCount = $this->game->tileManager->countPlayerTiles(
+                AiTurn::AI_PLAYER_ID,
+                OceanTile::LOCATION_TABLEAU,
+                Game::CATEGORY_OPEN_WATER,
             );
 
             $aiTotalScore = 0;
@@ -46,9 +47,7 @@ class EndScore extends GameState
                 $aiTotalScore = $aiScoreData['total'] + ($aiRockCount * 3);
             } else { // Hard
                 // Full points for ALL food
-                $allFoodSum = (int) $this->game->getUniqueValueFromDB(
-                    "SELECT SUM(`points`) FROM `ocean_tile` WHERE `owner_id` = " . AiTurn::AI_PLAYER_ID . " AND `location` = 'tableau' AND `category` = 'food'"
-                );
+                $allFoodSum = $this->game->tileManager->sumPlayerFoodPoints(AiTurn::AI_PLAYER_ID);
                 $aiTotalScore = $allFoodSum + ($aiRockCount * 5) + ($aiOpenWaterCount * 3);
             }
 

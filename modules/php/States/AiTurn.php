@@ -7,6 +7,7 @@ namespace Bga\Games\DeepDiveFG\States;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\Games\DeepDiveFG\Game;
+use Bga\Games\DeepDiveFG\OceanTile;
 
 class AiTurn extends GameState
 {
@@ -38,10 +39,8 @@ class AiTurn extends GameState
         }
 
         // Get facedown tiles at targetDepth
-        $facedownRows = $this->game->getCollectionFromDb(
-            "SELECT `tile_id` AS `id` FROM `ocean_tile` WHERE `depth` = {$targetDepth} AND `location` = 'ocean' AND `is_faceup` = 0 ORDER BY `tile_order` ASC"
-        );
-        $facedownIds = array_map('intval', array_keys($facedownRows));
+        $facedownTiles = $this->game->tileManager->getFacedownTilesAtDepth($targetDepth);
+        $facedownIds = array_map(fn(OceanTile $t) => $t->id, $facedownTiles);
 
         if (empty($facedownIds)) {
             // No facedown tiles anywhere!
@@ -49,8 +48,11 @@ class AiTurn extends GameState
         }
 
         $tileId = $facedownIds[0];
-        Game::DbQuery("UPDATE `ocean_tile` SET `is_faceup` = 1 WHERE `tile_id` = {$tileId}");
         $tile = $this->game->getTile($tileId);
+        if ($tile === null) {
+            return NextPlayer::class;
+        }
+        $this->game->tileManager->flipTile($tile);
         $facedownRemaining = $this->game->getFacedownTilesCount($targetDepth);
 
         // Advance AI depth marker for next turn (wraps 1..5)
@@ -61,15 +63,7 @@ class AiTurn extends GameState
             'player_id' => self::AI_PLAYER_ID,
             'player_name' => clienttranslate('AI Opponent'),
             'depth' => $targetDepth,
-            'tile' => [
-                'id' => (int) $tile['tile_id'],
-                'depth' => (int) $tile['depth'],
-                'category' => $tile['category'],
-                'foodColor' => $tile['food_color'],
-                'points' => (int) $tile['points'],
-                'isExtra' => (bool) $tile['is_extra'],
-                'isFaceup' => true,
-            ],
+            'tile' => $tile->toArray(),
             'tile_desc' => $this->getTileDescription($tile),
             'facedownRemaining' => $facedownRemaining,
         ]);
@@ -85,54 +79,57 @@ class AiTurn extends GameState
             ]);
         }
 
-        $category = $tile['category'];
+        $category = $tile->category;
 
         if ($category === Game::CATEGORY_PREDATOR) {
             // AI leaves predator in place and looks for faceup food tiles at targetDepth
-            $faceupFood = array_values($this->game->getCollectionFromDb(
-                "SELECT `tile_id` AS `id`, `food_color` AS `foodColor`, `points`
-                 FROM `ocean_tile`
-                 WHERE `depth` = {$targetDepth} AND `location` = 'ocean' AND `is_faceup` = 1 AND `category` = 'food'"
+            $faceupFood = array_values(array_filter(
+                $this->game->tileManager->getFaceupTilesAtDepth($targetDepth),
+                fn(OceanTile $t) => $t->category === Game::CATEGORY_FOOD,
             ));
 
             if (!empty($faceupFood)) {
                 // Determine AI color counts
                 $aiFoodCounts = [
-                    Game::COLOR_PINK => (int) $this->game->getUniqueValueFromDB("SELECT COUNT(*) FROM `ocean_tile` WHERE `owner_id` = " . self::AI_PLAYER_ID . " AND `location` = 'tableau' AND `food_color` = 'pink'"),
-                    Game::COLOR_GREEN => (int) $this->game->getUniqueValueFromDB("SELECT COUNT(*) FROM `ocean_tile` WHERE `owner_id` = " . self::AI_PLAYER_ID . " AND `location` = 'tableau' AND `food_color` = 'green'"),
-                    Game::COLOR_YELLOW => (int) $this->game->getUniqueValueFromDB("SELECT COUNT(*) FROM `ocean_tile` WHERE `owner_id` = " . self::AI_PLAYER_ID . " AND `location` = 'tableau' AND `food_color` = 'yellow'"),
+                    Game::COLOR_PINK => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTile::LOCATION_TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_PINK),
+                    Game::COLOR_GREEN => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTile::LOCATION_TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_GREEN),
+                    Game::COLOR_YELLOW => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTile::LOCATION_TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_YELLOW),
                 ];
 
                 // Sort candidates:
                 // 1) Fewest color in AI tableau
                 // 2) Highest points
-                usort($faceupFood, function ($a, $b) use ($aiFoodCounts) {
-                    $cntA = $aiFoodCounts[$a['foodColor']];
-                    $cntB = $aiFoodCounts[$b['foodColor']];
+                usort($faceupFood, function (OceanTile $a, OceanTile $b) use ($aiFoodCounts) {
+                    $cntA = $aiFoodCounts[$a->foodColor];
+                    $cntB = $aiFoodCounts[$b->foodColor];
                     if ($cntA !== $cntB) {
                         return $cntA <=> $cntB;
                     }
-                    return (int) $b['points'] <=> (int) $a['points'];
+                    return (int) $b->points <=> (int) $a->points;
                 });
 
                 // Check if top candidates tie
                 $best = $faceupFood[0];
-                $tied = array_filter($faceupFood, function ($item) use ($best, $aiFoodCounts) {
-                    return $aiFoodCounts[$item['foodColor']] === $aiFoodCounts[$best['foodColor']]
-                        && (int) $item['points'] === (int) $best['points'];
+                $tied = array_filter($faceupFood, function (OceanTile $item) use ($best, $aiFoodCounts) {
+                    return $aiFoodCounts[$item->foodColor] === $aiFoodCounts[$best->foodColor]
+                        && (int) $item->points === (int) $best->points;
                 });
 
                 if (count($tied) > 1) {
                     // Tiebreak required by human player
-                    $this->globals->set('soloTiebreakCandidateIds', array_map(fn($t) => (int) $t['id'], array_values($tied)));
+                    $this->globals->set('soloTiebreakCandidateIds', array_map(fn(OceanTile $t) => $t->id, array_values($tied)));
                     return SoloChooseTiebreak::class;
                 } else {
-                    $this->game->collectTileForPlayer((int) $best['id'], self::AI_PLAYER_ID);
+                    $this->game->collectTileForPlayer((int) $best->id, self::AI_PLAYER_ID);
                     $this->notify->all('tileCollected', clienttranslate('AI Opponent takes faceup ${tile_desc} from Depth ${depth}!'), [
                         'player_id' => self::AI_PLAYER_ID,
                         'player_name' => clienttranslate('AI Opponent'),
-                        'tile' => $best,
-                        'tile_desc' => sprintf(clienttranslate('%s Food (%d pts)'), ucfirst((string) $best['foodColor']), (int) $best['points']),
+                        'tile' => [
+                            'id' => $best->id,
+                            'foodColor' => $best->foodColor,
+                            'points' => $best->points,
+                        ],
+                        'tile_desc' => sprintf(clienttranslate('%s Food (%d pts)'), ucfirst((string) $best->foodColor), (int) $best->points),
                         'depth' => $targetDepth,
                     ]);
                 }
@@ -140,25 +137,25 @@ class AiTurn extends GameState
         } else {
             // Food, Rock, or Open Water: AI collects it!
             $loc = match ($category) {
-                Game::CATEGORY_ROCK => 'rock',
-                Game::CATEGORY_FOOD => 'tableau',
-                default => 'tableau',
+                Game::CATEGORY_ROCK => OceanTile::LOCATION_ROCK,
+                Game::CATEGORY_FOOD => OceanTile::LOCATION_TABLEAU,
+                default => OceanTile::LOCATION_TABLEAU,
             };
             if ($category === Game::CATEGORY_FOOD) {
                 $this->game->collectTileForPlayer($tileId, self::AI_PLAYER_ID);
             } else {
-                Game::DbQuery("UPDATE `ocean_tile` SET `location` = '{$loc}', `owner_id` = " . self::AI_PLAYER_ID . " WHERE `tile_id` = {$tileId}");
+                $this->game->tileManager->moveTileToPlayerLocation($tile, $loc, self::AI_PLAYER_ID);
             }
 
             $this->notify->all('tileCollected', clienttranslate('AI Opponent collects ${tile_desc} from Depth ${depth}!'), [
                 'player_id' => self::AI_PLAYER_ID,
                 'player_name' => clienttranslate('AI Opponent'),
                 'tile' => [
-                    'id' => (int) $tile['tile_id'],
-                    'depth' => (int) $tile['depth'],
-                    'category' => $tile['category'],
-                    'foodColor' => $tile['food_color'],
-                    'points' => (int) $tile['points'],
+                    'id' => $tile->id,
+                    'depth' => $tile->depth,
+                    'category' => $tile->category,
+                    'foodColor' => $tile->foodColor,
+                    'points' => $tile->points,
                 ],
                 'tile_desc' => $this->getTileDescription($tile),
                 'depth' => $targetDepth,
@@ -168,16 +165,16 @@ class AiTurn extends GameState
         return NextPlayer::class;
     }
 
-    private function getTileDescription(array $tile): string
+    private function getTileDescription(OceanTile $tile): string
     {
-        return match ($tile['category']) {
+        return match ($tile->category) {
             Game::CATEGORY_OPEN_WATER => clienttranslate('Open Water'),
             Game::CATEGORY_ROCK => clienttranslate('Rock'),
             Game::CATEGORY_PREDATOR => clienttranslate('Predator'),
             Game::CATEGORY_FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
-                ucfirst((string) $tile['food_color']),
-                (int) $tile['points']
+                ucfirst((string) $tile->foodColor),
+                (int) $tile->points
             ),
             default => clienttranslate('Tile'),
         };

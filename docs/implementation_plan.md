@@ -77,7 +77,8 @@ An architectural and interaction blueprint for implementing **Deep Dive** on Boa
 
 - **Tile Persistence: `ItemManager` (Typed Item Class) vs. Legacy `Deck`**
   - *Chosen Approach*: Use BGA's modern `ItemManagerFactory` (`$this->bga->itemManagerFactory`) with an `OceanTile` `#[Item]` entity class (or `Deck` if targeting older studio templates, though `ItemManager` is first-class in `_ide_helper.php`).
-  - *Why*: `ItemManager` provides strongly typed PHP 8 properties (`depth`, `tileCategory`, `foodColor`, `points`, `isExtra`, `isFaceup`, `trappedPlayerId`, `rowIndex`), clean location tuples (`Location::from('ocean', $depth)` / `Location::from('tableau', $playerId, $color)`), and native collection filtering (`Collection::where()`), removing raw SQL boilerplate.
+  - *Why*: `ItemManager` provides strongly typed PHP 8 properties (`depth`, `category`, `foodColor`, `points`, `isExtra`, `isFaceup`, `trappedPlayerId`, `rowIndex`), clean location tuples (`['ocean', $depth]` / `['tableau', $playerId]`), and native collection filtering (`Collection::filter()`), removing raw SQL boilerplate.
+  - *Status (Nov 19, 2026 — implemented)*: `modules/php/OceanTile.php` + `modules/php/OceanTileManager.php` (the single owner of all `ocean_tile` access). The `ocean_tile` table is created by `ItemManager::initDb()` and is **not** declared in `dbmodel.sql`; there is no `trapped_penguin` table — a trapped Penguin lives on its Predator tile as `trappedPlayerId`. The AI uses `tableau` / `rock` with locationArg `9999` (no separate `ai_tableau` location).
   - *Hidden-Information Security*: Before returning tiles in `getAllDatas()` or `getArgs()`, any tile with `isFaceup === false` is serialized strictly as `{ id, depth, faceup: false }`—never leaking `tileCategory`, `foodColor`, or `points` over the network to prevent client-side inspection cheating.
 
 - **Live Score Synchronization (`PlayerCounter`)**
@@ -213,15 +214,16 @@ Each `ACTIVE_PLAYER` state implements `zombie(int $playerId): string`:
 
 - **`OceanTile` (`#[Item(tableName: 'ocean_tile')]`)**:
   - `id` (`ItemFieldKind::ID`)
-  - `location` (`ItemFieldKind::LOCATION`): `'ocean'`, `'box'`, `'tableau'`, `'rock'`, `'ai_tableau'`
-  - `order` (`ItemFieldKind::ORDER`): Sort position within depth or column row
-  - `depth` (`int`, `1..5`)
+  - `location` (`ItemFieldKind::LOCATION`, index 0): `'ocean'`, `'box'`, `'tableau'`, `'rock'`
+  - `locationArg` (`ItemFieldKind::LOCATION`, index 1): depth (`1..5`) when in `'ocean'`, player id (incl. AI `9999`) when in `'tableau'` / `'rock'`, `null` in `'box'`
+  - `order` (`ItemFieldKind::ORDER`): Sort position within its exact location (draw order in the ocean)
+  - `depth` (`int`, `1..5`): the tile's original depth, kept after collection
   - `category` (`string`: `'open_water' | 'rock' | 'food' | 'predator'`)
   - `foodColor` (`?string`: `'pink' | 'green' | 'yellow'`)
   - `points` (`int`, `0..10`)
   - `isExtra` (`bool`: `true` for 4–6P marked tiles)
   - `isFaceup` (`bool`)
-  - `ownerId` (`?int`: player ID in tableau/rock, or player ID of trapped Penguin when on an ocean Predator)
+  - `trappedPlayerId` (`?int`: player id of the Penguin trapped on this Predator tile, or `null`; replaces the old `trapped_penguin` table)
   - `rowIndex` (`?int`: 1-based set row in tableau)
 - **`Globals` (`Bga\GameFramework\Db\Globals`)**:
   - `startPlayerId` (`int`), `currentDepth` (`int`), `flippedTileId` (`?int`), `usedRockThisTurn` (`bool`), `gameEndTriggered` (`bool`), `lastDiveFlipped` (`bool`), `isSoloMode` (`bool`), `soloAiDepth` (`int`), `soloAiTurn` (`bool`).

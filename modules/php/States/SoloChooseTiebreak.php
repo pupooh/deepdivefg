@@ -10,6 +10,7 @@ use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
+use Bga\Games\DeepDiveFG\OceanTile;
 
 class SoloChooseTiebreak extends GameState
 {
@@ -27,20 +28,24 @@ class SoloChooseTiebreak extends GameState
 
     public function getArgs(): array
     {
-        $candidateIds = (array) $this->globals->get('soloTiebreakCandidateIds', []);
-        $idList = implode(",", array_map('intval', $candidateIds));
+        $candidateIds = array_map('intval', (array) $this->globals->get('soloTiebreakCandidateIds', []));
 
         $candidateTiles = [];
-        if (!empty($idList)) {
-            $candidateTiles = array_values($this->game->getCollectionFromDb(
-                "SELECT `tile_id` AS `id`, `depth`, `category`, `food_color` AS `foodColor`, `points`
-                 FROM `ocean_tile`
-                 WHERE `tile_id` IN ({$idList})"
-            ));
+        if (!empty($candidateIds)) {
+            $candidateTiles = array_map(
+                fn(OceanTile $t) => [
+                    'id' => $t->id,
+                    'depth' => $t->depth,
+                    'category' => $t->category,
+                    'foodColor' => $t->foodColor,
+                    'points' => $t->points,
+                ],
+                $this->game->tileManager->getTilesByIds($candidateIds),
+            );
         }
 
         return [
-            'candidateTileIds' => array_map('intval', $candidateIds),
+            'candidateTileIds' => $candidateIds,
             'candidateTiles' => $candidateTiles,
         ];
     }
@@ -59,14 +64,14 @@ class SoloChooseTiebreak extends GameState
             'player_id' => AiTurn::AI_PLAYER_ID,
             'player_name' => clienttranslate('AI Opponent'),
             'tile' => [
-                'id' => (int) $collected['tile_id'],
-                'depth' => (int) $collected['depth'],
-                'category' => $collected['category'],
-                'foodColor' => $collected['food_color'],
-                'points' => (int) $collected['points'],
+                'id' => $collected->id,
+                'depth' => $collected->depth,
+                'category' => $collected->category,
+                'foodColor' => $collected->foodColor,
+                'points' => $collected->points,
             ],
-            'tile_desc' => sprintf(clienttranslate('%s Food (%d pts)'), ucfirst((string) $collected['food_color']), (int) $collected['points']),
-            'depth' => (int) $collected['depth'],
+            'tile_desc' => sprintf(clienttranslate('%s Food (%d pts)'), ucfirst((string) $collected->foodColor), (int) $collected->points),
+            'depth' => (int) $collected->depth,
         ]);
 
         return NextPlayer::class;
