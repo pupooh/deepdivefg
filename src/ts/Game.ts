@@ -75,29 +75,17 @@ export class Game {
         // Build main container (lanes and tableau slots start empty; stocks fill them)
         gameArea.insertAdjacentHTML('beforeend', `
             <div id="dd-container">
-                <div id="dd-header-banner">
-                    <div id="dd-token-container">
-                        <div id="dd-start-token" class="${gamedatas.lastDiveFlipped ? 'last-dive' : 'first-player'}">
-                            <span class="token-side token-front">1st</span>
-                            <span class="token-side token-back">LAST DIVE</span>
-                        </div>
-                    </div>
-                    <div id="dd-status-text">
-                        ${gamedatas.lastDiveFlipped ? _('Last Dive in progress! Each player takes one final turn.') : _('Dive into the depths to catch food sets!')}
-                    </div>
-                </div>
-
                 <div id="dd-main-layout">
-                    <!-- Ocean Board: 5 Depth Rows with wrapping tile lanes -->
-                    <div id="dd-ocean-board">
-                        ${[1, 2, 3, 4, 5].map(d => this.renderDepthRowHtml(d, gamedatas.depths[d])).join('')}
-                    </div>
-
                     <!-- Player Tableaus Area -->
                     <div id="dd-players-area">
                         <div id="dd-tableaus-container">
                             ${Object.keys(gamedatas.players).map(pId => this.renderPlayerTableauHtml(Number(pId))).join('')}
                         </div>
+                    </div>
+
+                    <!-- Ocean Board: 5 Depth Rows with wrapping tile lanes -->
+                    <div id="dd-ocean-board">
+                        ${[1, 2, 3, 4, 5].map(d => this.renderDepthRowHtml(d, gamedatas.depths[d])).join('')}
                     </div>
                 </div>
             </div>
@@ -206,11 +194,11 @@ export class Game {
 
     private renderDepthRowHtml(depth: number, depthData: DepthData): string {
         const depthNames = [
-            _('Sunlight Zone (1–2 pts)'),
-            _('Twilight Zone (2–4 pts)'),
-            _('Midnight Zone (3–5 pts)'),
-            _('Abyssal Zone (5–7 pts)'),
-            _('Hadal Trench (8–10 pts)'),
+            _('Sunlight Zone'),
+            _('Twilight Zone'),
+            _('Midnight Zone'),
+            _('Abyssal Zone'),
+            _('Hadal Trench'),
         ];
         const isExhausted = depthData ? depthData.facedownCount === 0 : false;
 
@@ -219,7 +207,6 @@ export class Game {
                 <div class="dd-depth-header">
                     <span class="dd-depth-badge">D${depth}</span>
                     <span class="dd-depth-title">${depthNames[depth - 1]}</span>
-                    <span class="dd-depth-count-badge">${_('Facedown')}: <strong id="dd-facedown-count-${depth}">${depthData ? depthData.facedownCount : 0}</strong></span>
                     <div class="dd-depth-penguins" id="dd-depth-penguins-${depth}"></div>
                     <span class="dd-depth-exhausted-badge">${_('Exhausted — Skippable')}</span>
                 </div>
@@ -645,15 +632,9 @@ export class Game {
 
     public notif_tileFlipped(notif: any) {
         const args = this.getNotifArgs<NotifTileFlipped>(notif);
-        const { tile, depth, facedownRemaining } = args;
+        const { tile } = args;
 
         void this.stocksReady.then(() => {
-            // Update facedown counter
-            const countBadge = document.getElementById(`dd-facedown-count-${depth}`);
-            if (countBadge) {
-                countBadge.innerText = `${facedownRemaining}`;
-            }
-
             // Flip the tile in its ocean stock (re-runs setupFrontDiv, so the
             // predator dock is recreated empty and must be re-rendered).
             const regTile = this.mergeTile(tile);
@@ -726,18 +707,6 @@ export class Game {
         const depthRow = document.getElementById(`dd-depth-${depth}`);
         if (depthRow) {
             depthRow.classList.add('depth-exhausted');
-        }
-    }
-
-    public notif_lastDiveFlipped(notif: any) {
-        const token = document.getElementById('dd-start-token');
-        if (token) {
-            token.classList.remove('first-player');
-            token.classList.add('last-dive', 'token-flip-animation');
-        }
-        const statusText = document.getElementById('dd-status-text');
-        if (statusText) {
-            statusText.innerText = _('Last Dive in progress! Each player takes one final turn.');
         }
     }
 }
