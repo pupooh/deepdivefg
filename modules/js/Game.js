@@ -115,6 +115,106 @@ https://en.doc.boardgamearena.com/BgaCards
 const BgaAnimations = await globalThis.importEsmLib('bga-animations', '1.x');
 const BgaCards = await globalThis.importEsmLib('bga-cards', '1.x');
 
+/**
+ * The card manager for Deep Dive's ocean tiles.
+ *
+ * This is our own subclass of the bga-cards library manager, following the
+ * Hearts tutorial pattern (`class CardManager extends BgaCards.Manager`).
+ * It describes how to display a tile: the `type` gives every card element
+ * the `dd-tile` class (and `dd-tile-front` / `dd-tile-back` on the sides),
+ * and setupFrontDiv/setupBackDiv paint the faces.
+ *
+ * Why a subclass, and why `BgaCards.Manager` (not `BgaCards.CardManager`)?
+ * Studio loads bga-cards from BGA's CDN
+ * (x.boardgamearena.net/data/game-libs/bga-cards/1.x/dist/bga-cards.umd.js),
+ * which exports the manager class as `Manager` — `BgaCards.CardManager`
+ * does not exist there, so `new BgaCards.CardManager(...)` fails at runtime
+ * with "BgaCards.CardManager is not a constructor". The GitHub 1.1.2 code
+ * exports it as `CardManager`, but that is a different lineage from what
+ * Studio serves. The repo's bga-cards.d.ts / bga-animations.d.ts are the
+ * CDN dist typings (downloaded Nov 19, 2026; 1.x then matched 1.0.18) —
+ * do not edit them, and re-download only when a new 1.x ships.
+ */
+class OceanTileManager extends BgaCards.Manager {
+    constructor(game) {
+        super({
+            animationManager: game.animationManager,
+            type: 'dd-tile',
+            getId: (tile) => `dd-tile-${tile.id}`,
+            setupFrontDiv: (tile, div) => {
+                // The side div already carries `bga-cards_card-side front
+                // dd-tile-front`; add only the face classes, never replace
+                // className (that would drop the lib's classes).
+                div.classList.add(...tileFaceClasses(tile).split(' '));
+                div.innerHTML = renderTileFrontInnerHtml(tile);
+            },
+            setupBackDiv: (tile, div) => {
+                div.classList.add('tile-facedown', `depth-back-${tile.depth}`);
+                div.innerHTML = renderTileBackInnerHtml(tile);
+            },
+            isCardVisible: (tile) => tile.isFaceup,
+            cardWidth: 68,
+            cardHeight: 68,
+            cardBorderRadius: '8px',
+        });
+    }
+}
+/** Face classes for a tile's front side (food colour / rock / open water / predator). */
+function tileFaceClasses(tile) {
+    const cat = tile.category || 'open_water';
+    let classes = `tile-faceup tile-${cat}`;
+    if (cat === 'food') {
+        classes += ` food-${tile.foodColor || 'pink'}`;
+    }
+    return classes;
+}
+/** Inner HTML of a facedown tile's back side. */
+function renderTileBackInnerHtml(tile) {
+    return `
+        <div class="tile-back-inner">
+            <span class="tile-depth-num">${tile.depth}</span>
+            <span class="tile-wave-pattern">〰️</span>
+        </div>
+    `;
+}
+/** Inner HTML of a faceup tile's front side. */
+function renderTileFrontInnerHtml(tile) {
+    const cat = tile.category || 'open_water';
+    let innerHtml = '';
+    if (cat === 'food') {
+        const color = tile.foodColor || 'pink';
+        const foodIcons = { pink: '🦐', green: '🐟', yellow: '🦑' };
+        const icon = foodIcons[color] || '🐟';
+        innerHtml = `
+            <div class="tile-food-icon">${icon}</div>
+            <div class="tile-points-badge">${tile.points}</div>
+            <div class="tile-color-tag">${color.toUpperCase()}</div>
+        `;
+    }
+    else if (cat === 'rock') {
+        innerHtml = `
+            <div class="tile-icon">🪨</div>
+            <div class="tile-label">${_('ROCK')}</div>
+        `;
+    }
+    else if (cat === 'open_water') {
+        innerHtml = `
+            <div class="tile-icon">🌊</div>
+            <div class="tile-label">${_('OPEN WATER')}</div>
+            <div class="tile-sublabel">${_('Dive Deeper')}</div>
+        `;
+    }
+    else if (cat === 'predator') {
+        innerHtml = `
+            <div class="tile-icon">🦈</div>
+            <div class="tile-label">${_('PREDATOR')}</div>
+            <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
+        `;
+    }
+    const extraBadge = tile.isExtra ? `<span class="tile-extra-icon" title="${_('4+ Player Tile')}">★</span>` : '';
+    return `${extraBadge}${innerHtml}`;
+}
+
 /** Pseudo-player id for the solo AI opponent (no tableau UI). */
 const AI_PLAYER_ID = 9999;
 class Game {
@@ -222,30 +322,21 @@ class Game {
                 }
             }
         }
-        // CardManager: one manager for every tile in the game.
-        // getId keeps the old `dd-tile-{id}` ids so existing selectors keep working.
-        this.cardManager = new BgaCards.CardManager({ instantaneousMode: this.bga.gameui.instantaneousMode }, {
-            getId: (tile) => `dd-tile-${tile.id}`,
-            setupDiv: (tile, div) => {
-                div.classList.add('dd-tile');
-            },
-            setupFrontDiv: (tile, div) => {
-                div.className = `card-side front ${this.tileFaceClasses(tile)}`;
-                div.innerHTML = this.renderTileFrontInnerHtml(tile);
-            },
-            setupBackDiv: (tile, div) => {
-                div.className = `card-side back tile-facedown depth-back-${tile.depth}`;
-                div.innerHTML = this.renderTileBackInnerHtml(tile);
-            },
-            isCardVisible: (tile) => tile.isFaceup,
+        // Animation manager first: the tile manager needs it in its
+        // settings, and it gates all bga-cards animations on the
+        // framework's replay/instantaneous flag.
+        this.animationManager = new BgaAnimations.Manager({
+            animationsActive: () => this.bga.gameui.bgaAnimationsActive(),
         });
+        // Tile manager: one manager for every tile in the game.
+        this.tileManager = new OceanTileManager(this);
         const addPromises = [];
         // Ocean: one LineStock per depth lane.
         for (let d = 1; d <= 5; d++) {
             const lane = document.getElementById(`dd-depth-tiles-${d}`);
             if (!lane)
                 continue;
-            const stock = new BgaCards.LineStock(this.cardManager, lane, {
+            const stock = new BgaCards.LineStock(this.tileManager, lane, {
                 wrap: 'nowrap',
                 center: false,
                 gap: '8px',
@@ -275,7 +366,7 @@ class Game {
         for (const pId of Object.keys(gamedatas.players)) {
             const anchor = document.getElementById(`dd-rock-stock-${Number(pId)}`);
             if (anchor) {
-                this.rockStocks[Number(pId)] = new BgaCards.VoidStock(this.cardManager, anchor);
+                this.rockStocks[Number(pId)] = new BgaCards.VoidStock(this.tileManager, anchor);
             }
         }
         this.stocksReady = Promise.all(addPromises);
@@ -311,61 +402,6 @@ class Game {
                 <div class="dd-depth-tiles-lane" id="dd-depth-tiles-${depth}"></div>
             </div>
         `;
-    }
-    /** Face classes for a tile's front side (food colour / rock / open water / predator). */
-    tileFaceClasses(tile) {
-        const cat = tile.category || 'open_water';
-        let classes = `tile-faceup tile-${cat}`;
-        if (cat === 'food') {
-            classes += ` food-${tile.foodColor || 'pink'}`;
-        }
-        return classes;
-    }
-    /** Inner HTML of a facedown tile's back side. */
-    renderTileBackInnerHtml(tile) {
-        return `
-            <div class="tile-back-inner">
-                <span class="tile-depth-num">${tile.depth}</span>
-                <span class="tile-wave-pattern">〰️</span>
-            </div>
-        `;
-    }
-    /** Inner HTML of a faceup tile's front side. */
-    renderTileFrontInnerHtml(tile) {
-        const cat = tile.category || 'open_water';
-        let innerHtml = '';
-        if (cat === 'food') {
-            const color = tile.foodColor || 'pink';
-            const foodIcons = { pink: '🦐', green: '🐟', yellow: '🦑' };
-            const icon = foodIcons[color] || '🐟';
-            innerHtml = `
-                <div class="tile-food-icon">${icon}</div>
-                <div class="tile-points-badge">${tile.points}</div>
-                <div class="tile-color-tag">${color.toUpperCase()}</div>
-            `;
-        }
-        else if (cat === 'rock') {
-            innerHtml = `
-                <div class="tile-icon">🪨</div>
-                <div class="tile-label">${_('ROCK')}</div>
-            `;
-        }
-        else if (cat === 'open_water') {
-            innerHtml = `
-                <div class="tile-icon">🌊</div>
-                <div class="tile-label">${_('OPEN WATER')}</div>
-                <div class="tile-sublabel">${_('Dive Deeper')}</div>
-            `;
-        }
-        else if (cat === 'predator') {
-            innerHtml = `
-                <div class="tile-icon">🦈</div>
-                <div class="tile-label">${_('PREDATOR')}</div>
-                <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
-            `;
-        }
-        const extraBadge = tile.isExtra ? `<span class="tile-extra-icon" title="${_('4+ Player Tile')}">★</span>` : '';
-        return `${extraBadge}${innerHtml}`;
     }
     renderTableauRowShellHtml(playerId, rowIdx) {
         const tiles = this.tableauModel[playerId]?.[rowIdx] || [];
@@ -444,7 +480,7 @@ class Game {
         const slotsEl = rowEl.querySelector('.dd-row-slots');
         if (!slotsEl)
             throw new Error(`Row slots container missing for player ${playerId} row ${rowIdx}`);
-        const stock = new BgaCards.SlotStock(this.cardManager, slotsEl, {
+        const stock = new BgaCards.SlotStock(this.tileManager, slotsEl, {
             slotsIds: ['pink', 'green', 'yellow'],
             slotClasses: ['dd-slot'],
             mapCardToSlot: (card) => card.foodColor || 'pink',
@@ -550,7 +586,7 @@ class Game {
             // Keep the old affordance colours: cyan = flip a facedown tile,
             // teal = take a faceup tile.
             for (const tile of selectable) {
-                const el = this.cardManager.getCardElement(tile);
+                const el = this.tileManager.getCardElement(tile);
                 el.classList.add(args.facedownIds.includes(tile.id) ? 'clickable-flip' : 'clickable-take');
             }
         });
@@ -747,7 +783,9 @@ class Game {
             this.tableauModel[playerId][rowIdx].push(regTile);
             const rowStock = this.ensureTableauRowStock(playerId, rowIdx);
             if (oceanStock) {
-                void rowStock.addCard(regTile, { fromStock: oceanStock }, { slot: regTile.foodColor });
+                // CDN addCard takes a single settings object: fromStock and
+                // slot together (not two separate arguments).
+                void rowStock.addCard(regTile, { fromStock: oceanStock, slot: regTile.foodColor });
             }
             else {
                 void rowStock.addCard(regTile);
@@ -770,7 +808,7 @@ class Game {
             // Flip the tile in its ocean stock (re-runs setupFrontDiv, so the
             // predator dock is recreated empty and must be re-rendered).
             const regTile = this.mergeTile(tile);
-            this.cardManager.setCardVisible(regTile, true);
+            this.tileManager.setCardVisible(regTile, true);
             this.updateAllTrappedPenguins();
         });
     }

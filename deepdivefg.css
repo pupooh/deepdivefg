@@ -313,7 +313,7 @@
   position: relative;
   user-select: none;
 }
-.dd-tile .card-side {
+.dd-tile .bga-cards_card-side {
   border-radius: 8px;
   border: 2px solid #ffffff;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
@@ -323,62 +323,62 @@
   justify-content: center;
   transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
 }
-.dd-tile .card-side.tile-facedown {
+.dd-tile .bga-cards_card-side.tile-facedown {
   background: linear-gradient(135deg, #134074 0%, #0b2545 100%);
   border-color: #caf0f8;
   color: #caf0f8;
 }
-.dd-tile .card-side.tile-facedown.depth-back-1 {
+.dd-tile .bga-cards_card-side.tile-facedown.depth-back-1 {
   background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%);
 }
-.dd-tile .card-side.tile-facedown.depth-back-2 {
+.dd-tile .bga-cards_card-side.tile-facedown.depth-back-2 {
   background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);
 }
-.dd-tile .card-side.tile-facedown.depth-back-3 {
+.dd-tile .bga-cards_card-side.tile-facedown.depth-back-3 {
   background: linear-gradient(135deg, #023e8a 0%, #03045e 100%);
 }
-.dd-tile .card-side.tile-facedown.depth-back-4 {
+.dd-tile .bga-cards_card-side.tile-facedown.depth-back-4 {
   background: linear-gradient(135deg, #03045e 0%, #081c3b 100%);
 }
-.dd-tile .card-side.tile-facedown.depth-back-5 {
+.dd-tile .bga-cards_card-side.tile-facedown.depth-back-5 {
   background: linear-gradient(135deg, #0b092b 0%, #020112 100%);
 }
-.dd-tile .card-side.tile-facedown .tile-back-inner {
+.dd-tile .bga-cards_card-side.tile-facedown .tile-back-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-.dd-tile .card-side.tile-facedown .tile-depth-num {
+.dd-tile .bga-cards_card-side.tile-facedown .tile-depth-num {
   font-size: 22px;
   font-weight: 900;
   line-height: 1;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
-.dd-tile .card-side.tile-facedown .tile-wave-pattern {
+.dd-tile .bga-cards_card-side.tile-facedown .tile-wave-pattern {
   font-size: 13px;
   opacity: 0.8;
 }
-.dd-tile .card-side.tile-food.food-pink {
+.dd-tile .bga-cards_card-side.tile-food.food-pink {
   background: linear-gradient(135deg, #ffccd5 0%, #ff758f 100%);
   border-color: #c9184a;
   color: #590d22;
 }
-.dd-tile .card-side.tile-food.food-green {
+.dd-tile .bga-cards_card-side.tile-food.food-green {
   background: linear-gradient(135deg, #d8f3dc 0%, #74c69d 100%);
   border-color: #2d6a4f;
   color: #081c15;
 }
-.dd-tile .card-side.tile-food.food-yellow {
+.dd-tile .bga-cards_card-side.tile-food.food-yellow {
   background: linear-gradient(135deg, #fff3b0 0%, #ffd166 100%);
   border-color: #e09f3e;
   color: #54390b;
 }
-.dd-tile .card-side.tile-food .tile-food-icon {
+.dd-tile .bga-cards_card-side.tile-food .tile-food-icon {
   font-size: 24px;
   line-height: 1;
 }
-.dd-tile .card-side.tile-food .tile-points-badge {
+.dd-tile .bga-cards_card-side.tile-food .tile-points-badge {
   position: absolute;
   top: 3px;
   left: 4px;
@@ -390,67 +390,67 @@
   color: #000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
-.dd-tile .card-side.tile-food .tile-color-tag {
+.dd-tile .bga-cards_card-side.tile-food .tile-color-tag {
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.5px;
   opacity: 0.85;
   margin-top: 2px;
 }
-.dd-tile .card-side.tile-rock {
+.dd-tile .bga-cards_card-side.tile-rock {
   background: linear-gradient(135deg, #ced4da 0%, #6c757d 100%);
   border-color: #495057;
   color: #212529;
 }
-.dd-tile .card-side.tile-rock .tile-icon {
+.dd-tile .bga-cards_card-side.tile-rock .tile-icon {
   font-size: 26px;
 }
-.dd-tile .card-side.tile-rock .tile-label {
+.dd-tile .bga-cards_card-side.tile-rock .tile-label {
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.5px;
 }
-.dd-tile .card-side.tile-open_water {
+.dd-tile .bga-cards_card-side.tile-open_water {
   background: linear-gradient(135deg, #90e0ef 0%, #0096c7 100%);
   border-color: #0077b6;
   color: #ffffff;
 }
-.dd-tile .card-side.tile-open_water .tile-icon {
+.dd-tile .bga-cards_card-side.tile-open_water .tile-icon {
   font-size: 24px;
 }
-.dd-tile .card-side.tile-open_water .tile-label {
+.dd-tile .bga-cards_card-side.tile-open_water .tile-label {
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.3px;
   line-height: 1.1;
 }
-.dd-tile .card-side.tile-open_water .tile-sublabel {
+.dd-tile .bga-cards_card-side.tile-open_water .tile-sublabel {
   font-size: 8px;
   font-weight: 700;
   opacity: 0.9;
 }
-.dd-tile .card-side.tile-predator {
+.dd-tile .bga-cards_card-side.tile-predator {
   background: linear-gradient(135deg, #e63946 0%, #6a040f 100%);
   border-color: #370617;
   color: #ffffff;
 }
-.dd-tile .card-side.tile-predator .tile-icon {
+.dd-tile .bga-cards_card-side.tile-predator .tile-icon {
   font-size: 24px;
 }
-.dd-tile .card-side.tile-predator .tile-label {
+.dd-tile .bga-cards_card-side.tile-predator .tile-label {
   font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.5px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
-.dd-tile .card-side.tile-predator .tile-trapped-dock {
+.dd-tile .bga-cards_card-side.tile-predator .tile-trapped-dock {
   display: flex;
   gap: 2px;
   position: absolute;
   bottom: 2px;
   justify-content: center;
 }
-.dd-tile .card-side .tile-extra-icon {
+.dd-tile .bga-cards_card-side .tile-extra-icon {
   position: absolute;
   top: 2px;
   right: 4px;
@@ -469,113 +469,38 @@
    Interactive Affordances & Animations
    ======================================================== */
 /* ========================================================
-   bga-cards 1.1.2 CSS (thoun/bga-cards/bga-cards.css)
-   Included here in case importEsmLib doesn't inject the lib CSS;
-   harmless duplication if it does.
+   bga-cards lib CSS: NOT inlined here. The CDN build Studio loads
+   (bga-cards.umd.js) injects its own stylesheet at load time, including
+   the .bga-cards_card / .bga-cards_card-sides / .bga-cards_card-side flip
+   rules and the .card-stock line/slot/void layouts. (The GitHub 1.1.2 CSS
+   that used to be pasted here targeted .card / .card-side, which the CDN
+   build does not use, so it was dead weight.)
    ======================================================== */
-body > .card {
-  position: absolute;
-  left: -9999px;
-  top: -9999px;
-}
-
-.card {
-  flex-shrink: 0;
-}
-
-.card[data-side=back] .card-sides {
-  transform: rotateY(180deg);
-}
-
-.card .card-sides {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transform-style: preserve-3d;
-  transition: transform 0.5s;
-}
-
-.card .card-sides .card-side {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transform-style: preserve-3d;
-  -webkit-backface-visibility: hidden; /* Safari */
-  backface-visibility: hidden;
-  transform-origin: center center;
-  box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-}
-
-.card .card-sides .card-side.front > *,
-.card .card-sides .card-side.back > * {
-  pointer-events: none;
-  user-select: none;
-}
-
-.card .card-sides .card-side.back {
-  transform: rotateY(180deg);
-}
-
-.card-stock .card.bga-cards_selectable-card:not(.bga-cards_disabled-card) {
-  cursor: pointer;
-}
-
-.card-stock .card.bga-cards_disabled-card {
-  cursor: not-allowed;
-  filter: contrast(0.6);
-}
-
-.card-stock.line-stock,
-.card-stock.slot-stock {
-  display: flex;
-  gap: var(--gap);
-  flex-wrap: var(--wrap);
-  flex-direction: var(--direction);
-}
-
-.card-stock.line-stock[data-center=true],
-.card-stock.slot-stock[data-center=true] {
-  justify-content: center;
-}
-
-.card-stock.void-stock {
-  position: relative;
-}
-
-.card-stock.void-stock .card {
-  position: absolute;
-}
-
 /* ========================================================
    Selectable Tiles (bga-cards setSelectionMode)
-   The selectable class lands on the outer .card; the visible
-   border/glow live on .card-side, so rules target that.
+   The selectable class lands on the outer .bga-cards_card; the visible
+   border/glow live on .bga-cards_card-side, so rules target that.
    ======================================================== */
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_disabled-card) .card-side {
+.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card) .bga-cards_card-side {
   border-color: #ffd166 !important;
   box-shadow: 0 0 10px rgba(255, 209, 102, 0.75) !important;
 }
 
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_disabled-card):hover {
+.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover {
   transform: translateY(-4px) scale(1.08);
   z-index: 10;
 }
 
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_disabled-card):hover .card-side {
+.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover .bga-cards_card-side {
   box-shadow: 0 6px 14px rgba(255, 209, 102, 0.9) !important;
 }
 
-.dd-tile.clickable-flip .card-side {
+.dd-tile.clickable-flip .bga-cards_card-side {
   border-color: #00f0ff !important;
   box-shadow: 0 0 12px rgba(0, 240, 255, 0.8) !important;
 }
 
-.dd-tile.clickable-take .card-side {
+.dd-tile.clickable-take .bga-cards_card-side {
   border-color: #2ec4b6 !important;
   box-shadow: 0 0 12px rgba(46, 196, 182, 0.8) !important;
 }
