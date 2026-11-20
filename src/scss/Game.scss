@@ -3,6 +3,18 @@
  * High-fidelity pure CSS/SVG visual identity
  */
 
+// Page background: light blue at the top fading to light turquoise at
+// the bottom. Set through BGA's --game-bga-main-background variable, plus
+// a direct html background as a fallback (the documented way games set
+// the page background) in case the variable alone is not picked up.
+:root {
+    --game-bga-main-background: linear-gradient(to bottom, #add8e6 0%, #afeeee 100%);
+}
+
+html {
+    background: linear-gradient(to bottom, #add8e6 0%, #afeeee 100%);
+}
+
 #dd-container {
     width: 100%;
     max-width: 1200px;
@@ -260,20 +272,16 @@
     // Rock Tile
     &.tile-rock {
         .tile-icon { font-size: 26px; }
-        .tile-label { font-size: 11px; font-weight: 900; letter-spacing: 0.5px; }
     }
 
     // Open Water Tile
     &.tile-open_water {
         .tile-icon { font-size: 24px; }
-        .tile-label { font-size: 9px; font-weight: 900; letter-spacing: 0.3px; line-height: 1.1; }
-        .tile-sublabel { font-size: 8px; font-weight: 700; opacity: 0.9; }
     }
 
     // Predator Tile
     &.tile-predator {
         .tile-icon { font-size: 24px; }
-        .tile-label { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.6); }
 
         .tile-trapped-dock {
             display: flex;
@@ -475,16 +483,6 @@
     justify-content: center;
     border: 1px dashed #cbd5e1;
     background: rgba(0, 0, 0, 0.02);
-
-    // Ghost food icon while the slot is empty (SlotStock creates the slot
-    // divs with data-slot-id="pink|green|yellow").
-    &[data-slot-id="pink"]:empty::after { content: '🦐'; }
-    &[data-slot-id="green"]:empty::after { content: '🐟'; }
-    &[data-slot-id="yellow"]:empty::after { content: '🦑'; }
-    &:empty::after {
-        font-size: 20px;
-        opacity: 0.35;
-    }
 }
 
 /* Anchor for a player's rock VoidStock: zero-size, so collected rocks

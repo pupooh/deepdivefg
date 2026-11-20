@@ -1,8 +1,15 @@
-@charset "UTF-8";
 /**
  * Deep Dive - BGA Stylesheet
  * High-fidelity pure CSS/SVG visual identity
  */
+:root {
+  --game-bga-main-background: linear-gradient(to bottom, #add8e6 0%, #afeeee 100%);
+}
+
+html {
+  background: linear-gradient(to bottom, #add8e6 0%, #afeeee 100%);
+}
+
 #dd-container {
   width: 100%;
   max-width: 1200px;
@@ -298,33 +305,11 @@
 .dd-tile .bga-cards_card-side.tile-rock .tile-icon {
   font-size: 26px;
 }
-.dd-tile .bga-cards_card-side.tile-rock .tile-label {
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-}
 .dd-tile .bga-cards_card-side.tile-open_water .tile-icon {
   font-size: 24px;
 }
-.dd-tile .bga-cards_card-side.tile-open_water .tile-label {
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  line-height: 1.1;
-}
-.dd-tile .bga-cards_card-side.tile-open_water .tile-sublabel {
-  font-size: 8px;
-  font-weight: 700;
-  opacity: 0.9;
-}
 .dd-tile .bga-cards_card-side.tile-predator .tile-icon {
   font-size: 24px;
-}
-.dd-tile .bga-cards_card-side.tile-predator .tile-label {
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 .dd-tile .bga-cards_card-side.tile-predator .tile-trapped-dock {
   display: flex;
@@ -527,19 +512,6 @@
   justify-content: center;
   border: 1px dashed #cbd5e1;
   background: rgba(0, 0, 0, 0.02);
-}
-.dd-slot[data-slot-id=pink]:empty::after {
-  content: "🦐";
-}
-.dd-slot[data-slot-id=green]:empty::after {
-  content: "🐟";
-}
-.dd-slot[data-slot-id=yellow]:empty::after {
-  content: "🦑";
-}
-.dd-slot:empty::after {
-  font-size: 20px;
-  opacity: 0.35;
 }
 
 /* Anchor for a player's rock VoidStock: zero-size, so collected rocks

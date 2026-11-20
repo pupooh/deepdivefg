@@ -88,13 +88,10 @@ function renderTileFrontInnerHtml(tile: OceanTile): string {
     } else if (cat === 'rock') {
         innerHtml = `
             <div class="tile-icon">🪨</div>
-            <div class="tile-label">${_('ROCK')}</div>
         `;
     } else if (cat === 'open_water') {
         innerHtml = `
             <div class="tile-icon">🌊</div>
-            <div class="tile-label">${_('OPEN WATER')}</div>
-            <div class="tile-sublabel">${_('Dive Deeper')}</div>
         `;
     } else if (cat === 'predator') {
         // Predator animal by depth, always orange (animal-orange filter).
@@ -108,7 +105,6 @@ function renderTileFrontInnerHtml(tile: OceanTile): string {
         const icon = predatorIcons[tile.depth] || '🦈';
         innerHtml = `
             <div class="tile-icon animal-orange">${icon}</div>
-            <div class="tile-label">${_('PREDATOR')}</div>
             <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
         `;
     }
