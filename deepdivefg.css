@@ -277,34 +277,20 @@
 }
 
 /* ========================================================
-   Horizontal Ocean Tiles Lane (Per Depth)
+   Ocean Tiles Lane (Per Depth)
    ======================================================== */
 .dd-depth-tiles-lane {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 6px 4px 10px 4px;
-  overflow-x: auto;
-  overflow-y: hidden;
   min-height: 84px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
-}
-.dd-depth-tiles-lane::-webkit-scrollbar {
-  height: 6px;
-}
-.dd-depth-tiles-lane::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.45);
-  border-radius: 3px;
-}
-.dd-depth-tiles-lane::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 /* ========================================================
-   Ocean Tiles (68px x 68px, Fixed in Horizontal Row)
+   Ocean Tiles (68px x 68px)
    ======================================================== */
 .dd-tile {
   flex: 0 0 68px;
@@ -348,12 +334,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-.dd-tile .bga-cards_card-side.tile-facedown .tile-depth-num {
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 .dd-tile .bga-cards_card-side.tile-facedown .tile-wave-pattern {
   font-size: 13px;

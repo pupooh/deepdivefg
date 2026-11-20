@@ -60,7 +60,6 @@ function tileFaceClasses(tile: OceanTile): string {
 function renderTileBackInnerHtml(tile: OceanTile): string {
     return `
         <div class="tile-back-inner">
-            <span class="tile-depth-num">${tile.depth}</span>
             <span class="tile-wave-pattern">〰️</span>
         </div>
     `;

@@ -172,7 +172,6 @@ function tileFaceClasses(tile) {
 function renderTileBackInnerHtml(tile) {
     return `
         <div class="tile-back-inner">
-            <span class="tile-depth-num">${tile.depth}</span>
             <span class="tile-wave-pattern">〰️</span>
         </div>
     `;
@@ -276,7 +275,7 @@ class Game {
                 </div>
 
                 <div id="dd-main-layout">
-                    <!-- Ocean Board: 5 Depth Rows with horizontal tile lanes -->
+                    <!-- Ocean Board: 5 Depth Rows with wrapping tile lanes -->
                     <div id="dd-ocean-board">
                         ${[1, 2, 3, 4, 5].map(d => this.renderDepthRowHtml(d, gamedatas.depths[d])).join('')}
                     </div>
@@ -337,7 +336,7 @@ class Game {
             if (!lane)
                 continue;
             const stock = new BgaCards.LineStock(this.tileManager, lane, {
-                wrap: 'nowrap',
+                wrap: 'wrap',
                 center: false,
                 gap: '8px',
             });
@@ -383,11 +382,11 @@ class Game {
     //// HTML Rendering Helpers
     renderDepthRowHtml(depth, depthData) {
         const depthNames = [
-            _('Depth 1 — Sunlight Zone (1–2 pts)'),
-            _('Depth 2 — Twilight Zone (2–4 pts)'),
-            _('Depth 3 — Midnight Zone (3–5 pts)'),
-            _('Depth 4 — Abyssal Zone (5–7 pts)'),
-            _('Depth 5 — Hadal Trench (8–10 pts)'),
+            _('Sunlight Zone (1–2 pts)'),
+            _('Twilight Zone (2–4 pts)'),
+            _('Midnight Zone (3–5 pts)'),
+            _('Abyssal Zone (5–7 pts)'),
+            _('Hadal Trench (8–10 pts)'),
         ];
         const isExhausted = depthData ? depthData.facedownCount === 0 : false;
         return `
