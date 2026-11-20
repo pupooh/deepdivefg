@@ -1,0 +1,20 @@
+{
+  "100": {
+    "name": "Solo AI Difficulty",
+    "values": {
+      "0": {
+        "name": "Easy",
+        "description": "Full points for completed sets, half for incomplete, 1 pt per Rock Tile."
+      },
+      "1": {
+        "name": "Medium",
+        "description": "Full points for completed sets, half for incomplete, 3 pts per Rock Tile."
+      },
+      "2": {
+        "name": "Hard",
+        "description": "Full points for all food, 5 pts per Rock, 3 pts per Open Water."
+      }
+    },
+    "default": 1
+  }
+}

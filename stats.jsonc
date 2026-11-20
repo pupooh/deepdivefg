@@ -1,0 +1,56 @@
+{
+    "table": {
+        "turns_number": {
+            "id": 10,
+            "name": "Number of turns",
+            "type": "int"
+        },
+        "game_end_depth": {
+            "id": 11,
+            "name": "Depth that triggered game end",
+            "type": "int"
+        }
+    },
+    "player": {
+        "turns_number": {
+            "id": 10,
+            "name": "Number of turns",
+            "type": "int"
+        },
+        "sets_completed": {
+            "id": 11,
+            "name": "Completed sets",
+            "type": "int"
+        },
+        "dives_taken": {
+            "id": 12,
+            "name": "Dives taken",
+            "type": "int"
+        },
+        "predators_hit": {
+            "id": 13,
+            "name": "Predators encountered",
+            "type": "int"
+        },
+        "retreats_triggered": {
+            "id": 14,
+            "name": "Retreats triggered",
+            "type": "int"
+        },
+        "rocks_collected": {
+            "id": 15,
+            "name": "Rocks collected",
+            "type": "int"
+        },
+        "rocks_used": {
+            "id": 16,
+            "name": "Rocks used to dive",
+            "type": "int"
+        },
+        "points_food": {
+            "id": 17,
+            "name": "Points from food tiles",
+            "type": "int"
+        }
+    }
+}
