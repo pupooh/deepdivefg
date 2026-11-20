@@ -49,11 +49,9 @@ export class OceanTileManager extends BgaCards.Manager<OceanTile> {
 /** Face classes for a tile's front side (food colour / rock / open water / predator). */
 function tileFaceClasses(tile: OceanTile): string {
     const cat = tile.category || 'open_water';
-    let classes = `tile-faceup tile-${cat}`;
-    if (cat === 'food') {
-        classes += ` food-${tile.foodColor || 'pink'}`;
-    }
-    return classes;
+    // Front background is driven by depth (depth-front-N), not by category
+    // or food color; the food color shows on the animal itself instead.
+    return `tile-faceup tile-${cat} depth-front-${tile.depth}`;
 }
 
 /** Inner HTML of a facedown tile's back side. */
@@ -72,12 +70,20 @@ function renderTileFrontInnerHtml(tile: OceanTile): string {
 
     if (cat === 'food') {
         const color = tile.foodColor || 'pink';
-        const foodIcons: Record<string, string> = { pink: '🦐', green: '🐟', yellow: '🦑' };
-        const icon = foodIcons[color] || '🐟';
+        // Animal by depth; tinted to the food color by the animal-{color}
+        // CSS filter (see Game.scss).
+        const depthIcons: Record<number, string> = {
+            1: '🦐', // shrimp
+            2: '🦀', // crab
+            4: '🐟', // fish
+            5: '🦑', // squid
+        };
+        const icon = tile.depth === 3
+            ? `<span class="tile-school-fish">🐟🐟🐟</span>` // school of fish
+            : (depthIcons[tile.depth] || '🐟');
         innerHtml = `
-            <div class="tile-food-icon">${icon}</div>
+            <div class="tile-food-icon animal-${color}">${icon}</div>
             <div class="tile-points-badge">${tile.points}</div>
-            <div class="tile-color-tag">${color.toUpperCase()}</div>
         `;
     } else if (cat === 'rock') {
         innerHtml = `
@@ -91,8 +97,17 @@ function renderTileFrontInnerHtml(tile: OceanTile): string {
             <div class="tile-sublabel">${_('Dive Deeper')}</div>
         `;
     } else if (cat === 'predator') {
+        // Predator animal by depth, always orange (animal-orange filter).
+        const predatorIcons: Record<number, string> = {
+            1: '🦭', // seal
+            2: '🦭', // seal
+            3: '🐋', // killer whale
+            4: '🐋', // killer whale
+            5: '🦈', // great white shark
+        };
+        const icon = predatorIcons[tile.depth] || '🦈';
         innerHtml = `
-            <div class="tile-icon">🦈</div>
+            <div class="tile-icon animal-orange">${icon}</div>
             <div class="tile-label">${_('PREDATOR')}</div>
             <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
         `;

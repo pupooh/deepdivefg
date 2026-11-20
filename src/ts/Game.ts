@@ -258,11 +258,6 @@ export class Game {
                         <span class="dd-stat-score" title="${_('Total Points')}">⭐ <span id="dd-total-score-${playerId}">${tableau ? tableau.score : 0}</span> pts</span>
                     </div>
                 </div>
-                <div class="dd-tableau-columns-header">
-                    <span class="col-title pink-col">${_('Pink 🦐')}</span>
-                    <span class="col-title green-col">${_('Green 🐟')}</span>
-                    <span class="col-title yellow-col">${_('Yellow 🦑')}</span>
-                </div>
                 <div class="dd-tableau-rows" id="dd-tableau-rows-${playerId}">
                     ${rowsHtml}
                 </div>

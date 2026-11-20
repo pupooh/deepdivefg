@@ -238,24 +238,38 @@
   font-size: 13px;
   opacity: 0.8;
 }
-.dd-tile .bga-cards_card-side.tile-food.food-pink {
-  background: linear-gradient(135deg, #ffccd5 0%, #ff758f 100%);
-  border-color: #c9184a;
-  color: #590d22;
+.dd-tile .bga-cards_card-side.depth-front-1 {
+  background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%);
+  border-color: #90e0ef;
+  color: #ffffff;
 }
-.dd-tile .bga-cards_card-side.tile-food.food-green {
-  background: linear-gradient(135deg, #d8f3dc 0%, #74c69d 100%);
-  border-color: #2d6a4f;
-  color: #081c15;
+.dd-tile .bga-cards_card-side.depth-front-2 {
+  background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);
+  border-color: #48cae4;
+  color: #ffffff;
 }
-.dd-tile .bga-cards_card-side.tile-food.food-yellow {
-  background: linear-gradient(135deg, #fff3b0 0%, #ffd166 100%);
-  border-color: #e09f3e;
-  color: #54390b;
+.dd-tile .bga-cards_card-side.depth-front-3 {
+  background: linear-gradient(135deg, #023e8a 0%, #03045e 100%);
+  border-color: #48cae4;
+  color: #ffffff;
+}
+.dd-tile .bga-cards_card-side.depth-front-4 {
+  background: linear-gradient(135deg, #03045e 0%, #081c3b 100%);
+  border-color: #03045e;
+  color: #ffffff;
+}
+.dd-tile .bga-cards_card-side.depth-front-5 {
+  background: linear-gradient(135deg, #0b092b 0%, #020112 100%);
+  border-color: #1a164b;
+  color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.tile-food .tile-food-icon {
   font-size: 24px;
   line-height: 1;
+}
+.dd-tile .bga-cards_card-side.tile-food .tile-school-fish {
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 .dd-tile .bga-cards_card-side.tile-food .tile-points-badge {
   position: absolute;
@@ -269,17 +283,17 @@
   color: #000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
-.dd-tile .bga-cards_card-side.tile-food .tile-color-tag {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  opacity: 0.85;
-  margin-top: 2px;
+.dd-tile .bga-cards_card-side .animal-pink {
+  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(300deg);
 }
-.dd-tile .bga-cards_card-side.tile-rock {
-  background: linear-gradient(135deg, #ced4da 0%, #6c757d 100%);
-  border-color: #495057;
-  color: #212529;
+.dd-tile .bga-cards_card-side .animal-green {
+  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(85deg);
+}
+.dd-tile .bga-cards_card-side .animal-yellow {
+  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(20deg);
+}
+.dd-tile .bga-cards_card-side .animal-orange {
+  filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-5deg);
 }
 .dd-tile .bga-cards_card-side.tile-rock .tile-icon {
   font-size: 26px;
@@ -288,11 +302,6 @@
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.5px;
-}
-.dd-tile .bga-cards_card-side.tile-open_water {
-  background: linear-gradient(135deg, #90e0ef 0%, #0096c7 100%);
-  border-color: #0077b6;
-  color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.tile-open_water .tile-icon {
   font-size: 24px;
@@ -307,11 +316,6 @@
   font-size: 8px;
   font-weight: 700;
   opacity: 0.9;
-}
-.dd-tile .bga-cards_card-side.tile-predator {
-  background: linear-gradient(135deg, #e63946 0%, #6a040f 100%);
-  border-color: #370617;
-  color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.tile-predator .tile-icon {
   font-size: 24px;
@@ -470,27 +474,6 @@
   gap: 10px;
   font-size: 13px;
   font-weight: 700;
-}
-
-.dd-tableau-columns-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 800;
-  padding: 4px 0;
-  margin-bottom: 6px;
-  border-radius: 6px;
-  background: #edf2f7;
-}
-.dd-tableau-columns-header .pink-col {
-  color: #c9184a;
-}
-.dd-tableau-columns-header .green-col {
-  color: #2d6a4f;
-}
-.dd-tableau-columns-header .yellow-col {
-  color: #b07d12;
 }
 
 .dd-tableau-rows {
