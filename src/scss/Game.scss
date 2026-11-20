@@ -8,11 +8,11 @@
 // a direct html background as a fallback (the documented way games set
 // the page background) in case the variable alone is not picked up.
 :root {
-    --game-bga-main-background: linear-gradient(to bottom, #add8e6 0%, #afeeee 100%);
+    --game-bga-main-background: linear-gradient(to bottom, #7DD3F6 0%, #6CC0EE 100%);
 }
 
 html {
-    background: linear-gradient(to bottom, #add8e6 0%, #afeeee 100%);
+    background: linear-gradient(to bottom, #7DD3F6 0%, #6CC0EE 100%);
 }
 
 #dd-container {
