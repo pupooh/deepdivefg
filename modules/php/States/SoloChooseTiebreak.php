@@ -69,6 +69,7 @@ class SoloChooseTiebreak extends GameState
                 'category' => $collected->category,
                 'foodColor' => $collected->foodColor,
                 'points' => $collected->points,
+                'rowIndex' => $collected->rowIndex,
             ],
             'tile_desc' => sprintf(clienttranslate('%s Food (%d pts)'), ucfirst((string) $collected->foodColor), (int) $collected->points),
             'depth' => (int) $collected->depth,

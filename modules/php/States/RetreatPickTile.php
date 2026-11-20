@@ -62,6 +62,7 @@ class RetreatPickTile extends GameState
                 'category' => $collected->category,
                 'foodColor' => $collected->foodColor,
                 'points' => $collected->points,
+                'rowIndex' => $collected->rowIndex,
             ],
             'tile_desc' => $this->getTileDescription($collected),
         ]);
