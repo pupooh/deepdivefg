@@ -6,10 +6,7 @@ https://en.doc.boardgamearena.com/BgaAnimations
 https://en.doc.boardgamearena.com/BgaCards
 */
 
-import type BgaAnimationsType from "../../bga-animations";
-import type BgaCardsType from "../../bga-cards";
-
-const BgaAnimations: typeof BgaAnimationsType = await globalThis.importEsmLib('bga-animations', '1.x');
-const BgaCards: typeof BgaCardsType = await globalThis.importEsmLib('bga-cards', '1.x');
+const BgaAnimations: typeof globalThis.BgaAnimations = await globalThis.importEsmLib('bga-animations', '1.x');
+const BgaCards: typeof globalThis.BgaCards = await globalThis.importEsmLib('bga-cards', '1.x');
 
 export { BgaAnimations, BgaCards };

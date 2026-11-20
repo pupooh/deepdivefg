@@ -266,9 +266,10 @@
     position: relative;
     user-select: none;
 
-    // Face visuals live on the bga-cards .card-side (front/back), not on
-    // the outer card: .card-sides is absolutely positioned inside .dd-tile.
-    .card-side {
+    // Face visuals live on the bga-cards side element
+    // (.bga-cards_card-side front/back), not on the outer card: the
+    // .bga-cards_card-sides wrapper is absolutely positioned inside .dd-tile.
+    .bga-cards_card-side {
         border-radius: 8px;
         border: 2px solid #ffffff;
         box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
@@ -411,104 +412,38 @@
    Interactive Affordances & Animations
    ======================================================== */
 /* ========================================================
-   bga-cards 1.1.2 CSS (thoun/bga-cards/bga-cards.css)
-   Included here in case importEsmLib doesn't inject the lib CSS;
-   harmless duplication if it does.
+   bga-cards lib CSS: NOT inlined here. The CDN build Studio loads
+   (bga-cards.umd.js) injects its own stylesheet at load time, including
+   the .bga-cards_card / .bga-cards_card-sides / .bga-cards_card-side flip
+   rules and the .card-stock line/slot/void layouts. (The GitHub 1.1.2 CSS
+   that used to be pasted here targeted .card / .card-side, which the CDN
+   build does not use, so it was dead weight.)
    ======================================================== */
-body > .card {
-    position: absolute;
-    left: -9999px;
-    top: -9999px;
-}
-
-.card {
-    flex-shrink: 0;
-}
-.card[data-side=back] .card-sides {
-    transform: rotateY(180deg);
-}
-.card .card-sides {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    transform-style: preserve-3d;
-    transition: transform 0.5s;
-}
-.card .card-sides .card-side {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    transform-style: preserve-3d;
-    -webkit-backface-visibility: hidden; /* Safari */
-    backface-visibility: hidden;
-    transform-origin: center center;
-    box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-}
-.card .card-sides .card-side.front > *,
-.card .card-sides .card-side.back > * {
-    pointer-events: none;
-    user-select: none;
-}
-.card .card-sides .card-side.back {
-    transform: rotateY(180deg);
-}
-
-.card-stock .card.bga-cards_selectable-card:not(.bga-cards_disabled-card) {
-    cursor: pointer;
-}
-.card-stock .card.bga-cards_disabled-card {
-    cursor: not-allowed;
-    filter: contrast(0.6);
-}
-
-.card-stock.line-stock,
-.card-stock.slot-stock {
-    display: flex;
-    gap: var(--gap);
-    flex-wrap: var(--wrap);
-    flex-direction: var(--direction);
-}
-.card-stock.line-stock[data-center=true],
-.card-stock.slot-stock[data-center=true] {
-    justify-content: center;
-}
-
-.card-stock.void-stock {
-    position: relative;
-}
-.card-stock.void-stock .card {
-    position: absolute;
-}
 
 /* ========================================================
    Selectable Tiles (bga-cards setSelectionMode)
-   The selectable class lands on the outer .card; the visible
-   border/glow live on .card-side, so rules target that.
+   The selectable class lands on the outer .bga-cards_card; the visible
+   border/glow live on .bga-cards_card-side, so rules target that.
    ======================================================== */
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_disabled-card) .card-side {
+.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card) .bga-cards_card-side {
     border-color: #ffd166 !important;
     box-shadow: 0 0 10px rgba(255, 209, 102, 0.75) !important;
 }
 
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_disabled-card):hover {
+.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover {
     transform: translateY(-4px) scale(1.08);
     z-index: 10;
 }
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_disabled-card):hover .card-side {
+.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover .bga-cards_card-side {
     box-shadow: 0 6px 14px rgba(255, 209, 102, 0.9) !important;
 }
 
-.dd-tile.clickable-flip .card-side {
+.dd-tile.clickable-flip .bga-cards_card-side {
     border-color: #00f0ff !important;
     box-shadow: 0 0 12px rgba(0, 240, 255, 0.8) !important;
 }
 
-.dd-tile.clickable-take .card-side {
+.dd-tile.clickable-take .bga-cards_card-side {
     border-color: #2ec4b6 !important;
     box-shadow: 0 0 12px rgba(46, 196, 182, 0.8) !important;
 }
