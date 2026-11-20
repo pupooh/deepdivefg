@@ -10,6 +10,7 @@ use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
+use Bga\Games\DeepDiveFG\OceanTile;
 
 class RetreatPickTile extends GameState
 {
@@ -30,19 +31,13 @@ class RetreatPickTile extends GameState
         $activePlayerId = (int) $this->game->getActivePlayerId();
         $trappedPenguins = $this->game->getTrappedPenguins($activePlayerId);
         $trappedDepths = array_unique(array_map(fn($p) => (int) $p['depth'], $trappedPenguins));
-        $depthList = implode(",", $trappedDepths);
 
-        $eligibleTiles = $this->game->getCollectionFromDb(
-            "SELECT `tile_id` AS `id`, `depth`, `category`, `food_color` AS `foodColor`, `points`, `is_extra` AS `isExtra`
-             FROM `ocean_tile`
-             WHERE `location` = 'ocean' AND `is_faceup` = 1 AND `category` IN ('food', 'rock') AND `depth` IN ({$depthList})
-             ORDER BY `depth` ASC, `points` DESC"
-        );
+        $eligibleTiles = $this->game->tileManager->getEligibleRetreatTiles(array_values($trappedDepths));
 
         return [
             'trappedDepths' => array_values($trappedDepths),
-            'eligibleTileIds' => array_map('intval', array_keys($eligibleTiles)),
-            'eligibleTiles' => array_values($eligibleTiles),
+            'eligibleTileIds' => array_map(fn(OceanTile $t) => $t->id, $eligibleTiles),
+            'eligibleTiles' => array_map(fn(OceanTile $t) => $t->toArray(), $eligibleTiles),
         ];
     }
 
@@ -62,11 +57,11 @@ class RetreatPickTile extends GameState
             'player_id' => $activePlayerId,
             'player_name' => $this->game->getPlayerNameById($activePlayerId),
             'rescuedTile' => [
-                'id' => (int) $collected['tile_id'],
-                'depth' => (int) $collected['depth'],
-                'category' => $collected['category'],
-                'foodColor' => $collected['food_color'],
-                'points' => (int) $collected['points'],
+                'id' => $collected->id,
+                'depth' => $collected->depth,
+                'category' => $collected->category,
+                'foodColor' => $collected->foodColor,
+                'points' => $collected->points,
             ],
             'tile_desc' => $this->getTileDescription($collected),
         ]);
@@ -98,14 +93,14 @@ class RetreatPickTile extends GameState
         return $this->actRetreatEmpty($playerId);
     }
 
-    private function getTileDescription(array $tile): string
+    private function getTileDescription(OceanTile $tile): string
     {
-        return match ($tile['category']) {
+        return match ($tile->category) {
             Game::CATEGORY_ROCK => clienttranslate('Rock'),
             Game::CATEGORY_FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
-                ucfirst((string) $tile['food_color']),
-                (int) $tile['points']
+                ucfirst((string) $tile->foodColor),
+                (int) $tile->points
             ),
             default => clienttranslate('Tile'),
         };

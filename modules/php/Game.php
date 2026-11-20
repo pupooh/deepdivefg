@@ -31,23 +31,36 @@ class Game extends \Bga\GameFramework\Table
     public const COLOR_GREEN = 'green';
     public const COLOR_YELLOW = 'yellow';
 
+    /** Single owner of all `ocean_tile` access (see OceanTileManager). */
+    public OceanTileManager $tileManager;
+
     public function __construct()
     {
         parent::__construct();
+        $this->tileManager = new OceanTileManager($this);
     }
 
     public function getGameProgression(): int
     {
-        $facedownRemaining = (int) $this->getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM `ocean_tile` WHERE `location` = 'ocean' AND `is_faceup` = 0"
-        );
-        $totalInitial = 120; // approximate active tiles across all depths
+        $facedownRemaining = $this->tileManager->getTotalFacedownCount();
+        // Exact active-tile count recorded at setup (79..145 by player count).
+        $totalInitial = (int) $this->globals->get('totalOceanTiles', 120);
+        if ($totalInitial <= 0) {
+            return 0;
+        }
         $progression = (int) round((1 - ($facedownRemaining / $totalInitial)) * 100);
         return min(100, max(0, $progression));
     }
 
     public function upgradeTableDb($from_version)
     {
+        // The `ocean_tile` table is created by ItemManager::initDb() from the
+        // OceanTile class, so new fields are added via
+        // $this->tileManager->items->upgradeTableDbAddColumns([...]).
+        // NOTE: tables created before this migration used the old raw-SQL
+        // schema (tile_id / food_color / ...) and a separate
+        // `trapped_penguin` table; they are not migrated in place — a
+        // pre-release table must be recreated (Express Stop + new table).
     }
 
     protected function setupNewGame($players, $options = [])
@@ -92,8 +105,10 @@ class Game extends \Bga\GameFramework\Table
         $this->globals->set('soloAiTurn', false);
         $this->globals->set('soloDifficulty', (int) ($options[100] ?? 1));
 
-        // Create the 160 Ocean Tiles
-        $this->generateOceanTiles($playerCount);
+        // Create the `ocean_tile` table, then the 160 Ocean Tiles
+        $this->tileManager->initDb();
+        $totalOceanTiles = $this->generateOceanTiles($playerCount);
+        $this->globals->set('totalOceanTiles', $totalOceanTiles);
 
         // Initialize Statistics
         $this->tableStats->init('turns_number', 0);
@@ -118,64 +133,59 @@ class Game extends \Bga\GameFramework\Table
 
     /**
      * Generate the 160 Ocean Tiles and adjust according to player count.
+     * Returns the number of tiles left in the ocean (the active tiles).
      */
-    private function generateOceanTiles(int $playerCount): void
+    private function generateOceanTiles(int $playerCount): int
     {
-        $tiles = [];
+        $rows = [];
 
         // Definition of the 160 tiles
         // Depth 1 (44 tiles: 6 Open Water, 8 Rock, 24 Food [1-2 pts], 6 Predator)
         // 30 Main, 14 Extra
-        $this->addTilesToDefinition($tiles, 1, self::CATEGORY_OPEN_WATER, null, 0, main: 4, extra: 2);
-        $this->addTilesToDefinition($tiles, 1, self::CATEGORY_ROCK, null, 0, main: 6, extra: 2);
-        $this->addFoodTilesToDefinition($tiles, 1, [1, 2], mainPerColor: 5, extraPerColor: 3); // 15 main food, 9 extra food = 24
-        $this->addTilesToDefinition($tiles, 1, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 1); // 6 predator (total 30 main, 14 extra = 44)
+        $this->addTilesToDefinition($rows, 1, self::CATEGORY_OPEN_WATER, null, 0, main: 4, extra: 2);
+        $this->addTilesToDefinition($rows, 1, self::CATEGORY_ROCK, null, 0, main: 6, extra: 2);
+        $this->addFoodTilesToDefinition($rows, 1, [1, 2], mainPerColor: 5, extraPerColor: 3); // 15 main food, 9 extra food = 24
+        $this->addTilesToDefinition($rows, 1, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 1); // 6 predator (total 30 main, 14 extra = 44)
 
         // Depth 2 (40 tiles: 4 Open Water, 7 Rock, 21 Food [2-4 pts], 8 Predator)
         // 28 Main, 12 Extra
-        $this->addTilesToDefinition($tiles, 2, self::CATEGORY_OPEN_WATER, null, 0, main: 3, extra: 1);
-        $this->addTilesToDefinition($tiles, 2, self::CATEGORY_ROCK, null, 0, main: 5, extra: 2);
-        $this->addFoodTilesToDefinition($tiles, 2, [2, 3, 4], mainPerColor: 5, extraPerColor: 2); // 15 main food, 6 extra food = 21
-        $this->addTilesToDefinition($tiles, 2, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 28 main, 12 extra = 40)
+        $this->addTilesToDefinition($rows, 2, self::CATEGORY_OPEN_WATER, null, 0, main: 3, extra: 1);
+        $this->addTilesToDefinition($rows, 2, self::CATEGORY_ROCK, null, 0, main: 5, extra: 2);
+        $this->addFoodTilesToDefinition($rows, 2, [2, 3, 4], mainPerColor: 5, extraPerColor: 2); // 15 main food, 6 extra food = 21
+        $this->addTilesToDefinition($rows, 2, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 28 main, 12 extra = 40)
 
         // Depth 3 (30 tiles: 7 Open Water, 0 Rock, 15 Food [3-5 pts], 8 Predator)
         // 22 Main, 8 Extra
-        $this->addTilesToDefinition($tiles, 3, self::CATEGORY_OPEN_WATER, null, 0, main: 5, extra: 2);
-        $this->addFoodTilesToDefinition($tiles, 3, [3, 4, 5], mainPerColor: 4, extraPerColor: 1); // 12 main food, 3 extra food = 15
-        $this->addTilesToDefinition($tiles, 3, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 22 main, 8 extra = 30)
+        $this->addTilesToDefinition($rows, 3, self::CATEGORY_OPEN_WATER, null, 0, main: 5, extra: 2);
+        $this->addFoodTilesToDefinition($rows, 3, [3, 4, 5], mainPerColor: 4, extraPerColor: 1); // 12 main food, 3 extra food = 15
+        $this->addTilesToDefinition($rows, 3, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 22 main, 8 extra = 30)
 
         // Depth 4 (23 tiles: 3 Open Water, 0 Rock, 12 Food [5-7 pts], 8 Predator)
         // 17 Main, 6 Extra
-        $this->addTilesToDefinition($tiles, 4, self::CATEGORY_OPEN_WATER, null, 0, main: 2, extra: 1);
-        $this->addFoodTilesToDefinition($tiles, 4, [5, 6, 7], mainPerColor: 3, extraPerColor: 1); // 9 main food, 3 extra food = 12
-        $this->addTilesToDefinition($tiles, 4, self::CATEGORY_PREDATOR, null, 0, main: 6, extra: 2); // 8 predator (total 17 main, 6 extra = 23)
+        $this->addTilesToDefinition($rows, 4, self::CATEGORY_OPEN_WATER, null, 0, main: 2, extra: 1);
+        $this->addFoodTilesToDefinition($rows, 4, [5, 6, 7], mainPerColor: 3, extraPerColor: 1); // 9 main food, 3 extra food = 12
+        $this->addTilesToDefinition($rows, 4, self::CATEGORY_PREDATOR, null, 0, main: 6, extra: 2); // 8 predator (total 17 main, 6 extra = 23)
 
         // Depth 5 (23 tiles: 0 Open Water, 0 Rock, 12 Food [8-10 pts], 11 Predator)
         // 17 Main, 6 Extra
-        $this->addFoodTilesToDefinition($tiles, 5, [8, 9, 10], mainPerColor: 3, extraPerColor: 1); // 9 main food, 3 extra food = 12
-        $this->addTilesToDefinition($tiles, 5, self::CATEGORY_PREDATOR, null, 0, main: 8, extra: 3); // 11 predator (total 17 main, 6 extra = 23)
+        $this->addFoodTilesToDefinition($rows, 5, [8, 9, 10], mainPerColor: 3, extraPerColor: 1); // 9 main food, 3 extra food = 12
+        $this->addTilesToDefinition($rows, 5, self::CATEGORY_PREDATOR, null, 0, main: 8, extra: 3); // 11 predator (total 17 main, 6 extra = 23)
 
-        // Insert all tiles into ocean_tile
-        $values = [];
-        foreach ($tiles as $t) {
-            $foodColorVal = $t['food_color'] ? "'{$t['food_color']}'" : "NULL";
-            $values[] = "({$t['depth']}, '{$t['category']}', {$foodColorVal}, {$t['points']}, {$t['is_extra']}, 0, 'ocean', 0)";
-        }
-        $chunks = array_chunk($values, 50);
-        foreach ($chunks as $chunk) {
-            static::DbQuery(
-                "INSERT INTO `ocean_tile` (`depth`, `category`, `food_color`, `points`, `is_extra`, `is_faceup`, `location`, `tile_order`) VALUES "
-                . implode(",", $chunk)
-            );
-        }
+        $this->tileManager->createTiles($rows);
 
         // Adjust for player count:
         // 1-3 players: Extra tiles are removed to 'box'
         if ($playerCount <= 3) {
-            static::DbQuery("UPDATE `ocean_tile` SET `location` = 'box' WHERE `is_extra` = 1");
+            $extraTiles = array_values(array_filter(
+                $this->tileManager->items->getAllItems()->values(),
+                fn(OceanTile $t) => $t->isExtra,
+            ));
+            $this->tileManager->items->moveItems($extraTiles, OceanTile::LOCATION_BOX);
         }
 
-        // Remove random tiles per depth based on player count
+        // Remove random tiles per depth based on player count.
+        // ItemManager::shuffle() randomises the draw order in each depth,
+        // so the first N tiles in that order are a random sample.
         $removalCount = match ($playerCount) {
             1, 2 => 7,
             3 => 3,
@@ -185,131 +195,102 @@ class Game extends \Bga\GameFramework\Table
             default => 3,
         };
 
+        $totalOceanTiles = 0;
         for ($d = 1; $d <= 5; $d++) {
-            $tilesAtDepth = $this->getCollectionFromDb(
-                "SELECT `tile_id` FROM `ocean_tile` WHERE `depth` = {$d} AND `location` = 'ocean'"
-            );
-            $ids = array_keys($tilesAtDepth);
-            shuffle($ids);
-            $toRemove = array_slice($ids, 0, $removalCount);
+            $this->tileManager->shuffleDepth($d);
+            $tilesAtDepth = $this->tileManager->getOceanTilesAtDepth($d);
+            $toRemove = array_slice($tilesAtDepth, 0, $removalCount);
             if (!empty($toRemove)) {
-                $removeList = implode(",", $toRemove);
-                static::DbQuery("UPDATE `ocean_tile` SET `location` = 'box' WHERE `tile_id` IN ({$removeList})");
+                $this->tileManager->items->moveItems($toRemove, OceanTile::LOCATION_BOX);
             }
-
-            // Assign random tile_order to remaining ocean tiles
-            $remainingIds = array_slice($ids, $removalCount);
-            shuffle($remainingIds);
-            foreach ($remainingIds as $order => $tileId) {
-                static::DbQuery("UPDATE `ocean_tile` SET `tile_order` = {$order} WHERE `tile_id` = {$tileId}");
-            }
+            $totalOceanTiles += $this->tileManager->countOceanTilesAtDepth($d);
         }
+
+        return $totalOceanTiles;
     }
 
-    private function addTilesToDefinition(array &$tiles, int $depth, string $category, ?string $foodColor, int $points, int $main, int $extra): void
+    private function addTilesToDefinition(array &$rows, int $depth, string $category, ?string $foodColor, int $points, int $main, int $extra): void
     {
         for ($i = 0; $i < $main; $i++) {
-            $tiles[] = [
-                'depth' => $depth,
-                'category' => $category,
-                'food_color' => $foodColor,
-                'points' => $points,
-                'is_extra' => 0,
-            ];
+            $rows[] = $this->tileRow($depth, $category, $foodColor, $points, false);
         }
         for ($i = 0; $i < $extra; $i++) {
-            $tiles[] = [
-                'depth' => $depth,
-                'category' => $category,
-                'food_color' => $foodColor,
-                'points' => $points,
-                'is_extra' => 1,
-            ];
+            $rows[] = $this->tileRow($depth, $category, $foodColor, $points, true);
         }
     }
 
-    private function addFoodTilesToDefinition(array &$tiles, int $depth, array $possiblePoints, int $mainPerColor, int $extraPerColor): void
+    private function addFoodTilesToDefinition(array &$rows, int $depth, array $possiblePoints, int $mainPerColor, int $extraPerColor): void
     {
         $colors = [self::COLOR_PINK, self::COLOR_GREEN, self::COLOR_YELLOW];
         foreach ($colors as $color) {
             for ($i = 0; $i < $mainPerColor; $i++) {
                 $pt = $possiblePoints[$i % count($possiblePoints)];
-                $tiles[] = [
-                    'depth' => $depth,
-                    'category' => self::CATEGORY_FOOD,
-                    'food_color' => $color,
-                    'points' => $pt,
-                    'is_extra' => 0,
-                ];
+                $rows[] = $this->tileRow($depth, self::CATEGORY_FOOD, $color, $pt, false);
             }
             for ($i = 0; $i < $extraPerColor; $i++) {
                 $pt = $possiblePoints[($mainPerColor + $i) % count($possiblePoints)];
-                $tiles[] = [
-                    'depth' => $depth,
-                    'category' => self::CATEGORY_FOOD,
-                    'food_color' => $color,
-                    'points' => $pt,
-                    'is_extra' => 1,
-                ];
+                $rows[] = $this->tileRow($depth, self::CATEGORY_FOOD, $color, $pt, true);
             }
         }
     }
 
+    /** One createItems() row for a tile still facedown in the ocean. */
+    private function tileRow(int $depth, string $category, ?string $foodColor, int $points, bool $isExtra): array
+    {
+        return [
+            'location' => OceanTile::LOCATION_OCEAN,
+            'locationArg' => $depth,
+            'depth' => $depth,
+            'category' => $category,
+            'foodColor' => $foodColor,
+            'points' => $points,
+            'isExtra' => $isExtra,
+            'isFaceup' => false,
+            'trappedPlayerId' => null,
+            'rowIndex' => null,
+        ];
+    }
+
     /**
-     * Public DB helper methods
+     * Tile helpers — thin wrappers over OceanTileManager, so state classes
+     * never touch the tile table directly.
      */
 
-    public function getTile(int $tileId): ?array
+    public function getTile(int $tileId): ?OceanTile
     {
-        return $this->getObjectFromDB("SELECT * FROM `ocean_tile` WHERE `tile_id` = {$tileId}");
+        return $this->tileManager->getTile($tileId);
     }
 
     public function getFacedownTilesCount(int $depth): int
     {
-        return (int) $this->getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM `ocean_tile` WHERE `depth` = {$depth} AND `location` = 'ocean' AND `is_faceup` = 0"
-        );
+        return $this->tileManager->getFacedownCountAtDepth($depth);
     }
 
+    /** @return OceanTile[] */
     public function getFaceupTilesAtDepth(int $depth): array
     {
-        return array_values($this->getCollectionFromDb(
-            "SELECT `tile_id` AS `id`, `depth`, `category`, `food_color` AS `foodColor`, `points`, `is_extra` AS `isExtra`, `is_faceup` AS `isFaceup`
-             FROM `ocean_tile`
-             WHERE `depth` = {$depth} AND `location` = 'ocean' AND `is_faceup` = 1
-             ORDER BY `tile_order` ASC"
-        ));
+        return $this->tileManager->getFaceupTilesAtDepth($depth);
     }
 
+    /** @return array<int, array{id: int, playerId: int, tileId: int, depth: int}> */
     public function getTrappedPenguins(?int $playerId = null): array
     {
-        $sql = "SELECT `id`, `player_id` AS `playerId`, `tile_id` AS `tileId`, `depth` FROM `trapped_penguin`";
-        if ($playerId !== null) {
-            $sql .= " WHERE `player_id` = {$playerId}";
-        }
-        return array_values($this->getCollectionFromDb($sql));
+        return $this->tileManager->getTrappedPenguins($playerId);
     }
 
-    public function trapPenguin(int $playerId, int $tileId, int $depth): int
+    public function trapPenguin(int $playerId, int $tileId): int
     {
-        static::DbQuery(
-            "INSERT INTO `trapped_penguin` (`player_id`, `tile_id`, `depth`) VALUES ({$playerId}, {$tileId}, {$depth})"
-        );
-        return (int) $this->getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM `trapped_penguin` WHERE `player_id` = {$playerId}"
-        );
+        return $this->tileManager->trapPenguin($playerId, $tileId);
     }
 
     public function freeTrappedPenguins(int $playerId): void
     {
-        static::DbQuery("DELETE FROM `trapped_penguin` WHERE `player_id` = {$playerId}");
+        $this->tileManager->freeTrappedPenguins($playerId);
     }
 
     public function getPlayerRockCount(int $playerId): int
     {
-        return (int) $this->getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM `ocean_tile` WHERE `owner_id` = {$playerId} AND `location` = 'rock'"
-        );
+        return $this->tileManager->getPlayerRockCount($playerId);
     }
 
     public function canPlayerSkipDepth(int $playerId, int $depth): bool
@@ -319,10 +300,7 @@ class Game extends \Bga\GameFramework\Table
         }
 
         // Check if player has trapped penguin at this depth
-        $trappedCount = (int) $this->getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM `trapped_penguin` WHERE `player_id` = {$playerId} AND `depth` = {$depth}"
-        );
-        if ($trappedCount > 0) {
+        if ($this->tileManager->countTrappedPenguins($playerId, $depth) > 0) {
             return true;
         }
 
@@ -338,51 +316,42 @@ class Game extends \Bga\GameFramework\Table
         return false;
     }
 
-    public function collectTileForPlayer(int $tileId, int $playerId): array
+    public function collectTileForPlayer(int $tileId, int $playerId): OceanTile
     {
         $tile = $this->getTile($tileId);
         if (!$tile) {
             throw new \BgaVisibleSystemException("Tile not found: {$tileId}");
         }
 
-        if ($tile['category'] === self::CATEGORY_ROCK) {
-            static::DbQuery(
-                "UPDATE `ocean_tile` SET `location` = 'rock', `owner_id` = {$playerId}, `is_faceup` = 1 WHERE `tile_id` = {$tileId}"
-            );
+        if ($tile->category === self::CATEGORY_ROCK) {
+            $tile->isFaceup = true;
+            $this->tileManager->moveTileToPlayerLocation($tile, OceanTile::LOCATION_ROCK, $playerId);
+            $this->tileManager->items->updateItem($tile, ['isFaceup']);
             $this->playerStats->inc('rocks_collected', 1, $playerId);
-        } elseif ($tile['category'] === self::CATEGORY_FOOD) {
+        } elseif ($tile->category === self::CATEGORY_FOOD) {
             // Determine next rowIndex for this food color
-            $foodColor = $tile['food_color'];
-            $existingCount = (int) $this->getUniqueValueFromDB(
-                "SELECT COUNT(*) FROM `ocean_tile` WHERE `owner_id` = {$playerId} AND `location` = 'tableau' AND `food_color` = '{$foodColor}'"
-            );
-            $rowIndex = $existingCount + 1;
-            static::DbQuery(
-                "UPDATE `ocean_tile` SET `location` = 'tableau', `owner_id` = {$playerId}, `row_index` = {$rowIndex}, `is_faceup` = 1 WHERE `tile_id` = {$tileId}"
-            );
+            $foodColor = $tile->foodColor;
+            $existingCount = $this->tileManager->countPlayerTiles($playerId, OceanTile::LOCATION_TABLEAU, self::CATEGORY_FOOD, $foodColor);
+            $tile->rowIndex = $existingCount + 1;
+            $tile->isFaceup = true;
+            $this->tileManager->moveTileToPlayerLocation($tile, OceanTile::LOCATION_TABLEAU, $playerId);
+            $this->tileManager->items->updateItem($tile, ['rowIndex', 'isFaceup']);
             $this->updatePlayerScores();
         }
 
-        return $this->getTile($tileId);
+        return $tile;
     }
 
     public function computePlayerScore(int $playerId): array
     {
-        $foodTiles = $this->getCollectionFromDb(
-            "SELECT `tile_id` AS `id`, `food_color` AS `foodColor`, `points`, `row_index` AS `rowIndex`
-             FROM `ocean_tile`
-             WHERE `owner_id` = {$playerId} AND `location` = 'tableau'
-             ORDER BY `row_index` ASC"
-        );
-
         $rows = [];
-        foreach ($foodTiles as $t) {
-            $r = (int) $t['rowIndex'];
+        foreach ($this->tileManager->getPlayerFoodTiles($playerId) as $tile) {
+            $r = (int) $tile->rowIndex;
             if (!isset($rows[$r])) {
                 $rows[$r] = ['tiles' => [], 'sum' => 0];
             }
-            $rows[$r]['tiles'][] = $t;
-            $rows[$r]['sum'] += (int) $t['points'];
+            $rows[$r]['tiles'][] = $tile->toTableauArray();
+            $rows[$r]['sum'] += (int) $tile->points;
         }
 
         $totalScore = 0;
@@ -419,7 +388,8 @@ class Game extends \Bga\GameFramework\Table
     {
         $result = [];
 
-        // Players basic info & counters
+        // Players basic info & counters (framework `player` table, as in the
+        // BGA template — not a game table, so it stays a direct read).
         $result["players"] = $this->getCollectionFromDb(
             "SELECT `player_id` AS `id`, `player_name` AS `name`, `player_color` AS `color`, `player_score` AS `score`, `player_score_aux` AS `scoreAux` FROM `player`"
         );
@@ -440,34 +410,10 @@ class Game extends \Bga\GameFramework\Table
         for ($d = 1; $d <= 5; $d++) {
             $facedownCount = $this->getFacedownTilesCount($d);
 
-            // Get all ocean tiles at this depth ordered by tile_order
-            $tilesAtDepth = $this->getCollectionFromDb(
-                "SELECT `tile_id` AS `id`, `depth`, `category`, `food_color` AS `foodColor`, `points`, `is_extra` AS `isExtra`, `is_faceup` AS `isFaceup`
-                 FROM `ocean_tile`
-                 WHERE `depth` = {$d} AND `location` = 'ocean'
-                 ORDER BY `tile_order` ASC"
-            );
-
             $depthTiles = [];
-            foreach ($tilesAtDepth as $row) {
-                $isFaceup = ((int) $row['isFaceup'] === 1);
-                if ($isFaceup) {
-                    $depthTiles[] = [
-                        'id' => (int) $row['id'],
-                        'depth' => (int) $row['depth'],
-                        'category' => $row['category'],
-                        'foodColor' => $row['foodColor'],
-                        'points' => (int) $row['points'],
-                        'isExtra' => (bool) $row['isExtra'],
-                        'isFaceup' => true,
-                    ];
-                } else {
-                    $depthTiles[] = [
-                        'id' => (int) $row['id'],
-                        'depth' => (int) $row['depth'],
-                        'isFaceup' => false,
-                    ];
-                }
+            foreach ($this->tileManager->getOceanTilesAtDepth($d) as $tile) {
+                // Facedown tiles are anonymised: id + depth only.
+                $depthTiles[] = $tile->isFaceup ? $tile->toArray() : $tile->toFacedownArray();
             }
 
             $depths[$d] = [
@@ -486,12 +432,10 @@ class Game extends \Bga\GameFramework\Table
         foreach (array_keys($result['players']) as $pId) {
             $playerId = (int) $pId;
             $scoreData = $this->computePlayerScore($playerId);
-            $foodTiles = array_values($this->getCollectionFromDb(
-                "SELECT `tile_id` AS `id`, `depth`, `category`, `food_color` AS `foodColor`, `points`, `row_index` AS `rowIndex`
-                 FROM `ocean_tile`
-                 WHERE `owner_id` = {$playerId} AND `location` = 'tableau'
-                 ORDER BY `row_index` ASC, `food_color` ASC"
-            ));
+            $foodTiles = array_map(
+                fn(OceanTile $t) => $t->toTableauArray(),
+                $this->tileManager->getPlayerFoodTiles($playerId),
+            );
             $rockCount = $this->getPlayerRockCount($playerId);
             $trapped = array_values(array_filter($result['trappedPenguins'], fn($tp) => $tp['playerId'] == $playerId));
 

@@ -10,6 +10,7 @@ use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
+use Bga\Games\DeepDiveFG\OceanTile;
 
 class PlayerDiveStep extends GameState
 {
@@ -35,24 +36,20 @@ class PlayerDiveStep extends GameState
         $canIngestRock = ($currentDepth === 1 && !$usedRockThisTurn && $rockCount > 0);
         $canSkip = $this->game->canPlayerSkipDepth($activePlayerId, $currentDepth);
 
-        $facedownRows = $this->game->getCollectionFromDb(
-            "SELECT `tile_id` AS `id` FROM `ocean_tile` WHERE `depth` = {$currentDepth} AND `location` = 'ocean' AND `is_faceup` = 0 ORDER BY `tile_order` ASC"
+        $facedownIds = array_map(
+            fn(OceanTile $t) => $t->id,
+            $this->game->tileManager->getFacedownTilesAtDepth($currentDepth),
         );
-        $facedownIds = array_map('intval', array_keys($facedownRows));
-
-        $takeableRows = $this->game->getCollectionFromDb(
-            "SELECT `tile_id` AS `id` FROM `ocean_tile` WHERE `depth` = {$currentDepth} AND `location` = 'ocean' AND `is_faceup` = 1 AND `category` IN ('food', 'rock')"
+        $takeableFaceupIds = array_map(
+            fn(OceanTile $t) => $t->id,
+            $this->game->tileManager->getTakeableTilesAtDepth($currentDepth),
         );
-        $takeableFaceupIds = array_map('intval', array_keys($takeableRows));
 
         // Depths available for rock drop
         $validRockDepths = [];
         if ($canIngestRock) {
             for ($d = 1; $d <= 5; $d++) {
-                $count = (int) $this->game->getUniqueValueFromDB(
-                    "SELECT COUNT(*) FROM `ocean_tile` WHERE `depth` = {$d} AND `location` = 'ocean'"
-                );
-                if ($count > 0) {
+                if ($this->game->tileManager->countOceanTilesAtDepth($d) > 0) {
                     $validRockDepths[] = $d;
                 }
             }
@@ -78,13 +75,13 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile['location'] !== 'ocean' || (int) $tile['depth'] !== $currentDepth || (int) $tile['is_faceup'] !== 0) {
+        if ($tile->location !== OceanTile::LOCATION_OCEAN || $tile->depth !== $currentDepth || $tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be flipped at the current depth'));
         }
 
         // Reveal tile
-        Game::DbQuery("UPDATE `ocean_tile` SET `is_faceup` = 1 WHERE `tile_id` = {$tileId}");
-        $revealedTile = $this->game->getTile($tileId);
+        $this->game->tileManager->flipTile($tile);
+        $revealedTile = $tile;
 
         $facedownRemaining = $this->game->getFacedownTilesCount($currentDepth);
 
@@ -92,15 +89,7 @@ class PlayerDiveStep extends GameState
             'player_id' => $activePlayerId,
             'player_name' => $this->game->getPlayerNameById($activePlayerId),
             'depth' => $currentDepth,
-            'tile' => [
-                'id' => (int) $revealedTile['tile_id'],
-                'depth' => (int) $revealedTile['depth'],
-                'category' => $revealedTile['category'],
-                'foodColor' => $revealedTile['food_color'],
-                'points' => (int) $revealedTile['points'],
-                'isExtra' => (bool) $revealedTile['is_extra'],
-                'isFaceup' => true,
-            ],
+            'tile' => $revealedTile->toArray(),
             'tile_desc' => $this->getTileDescription($revealedTile),
             'facedownRemaining' => $facedownRemaining,
         ]);
@@ -117,7 +106,7 @@ class PlayerDiveStep extends GameState
         }
 
         // Handle category
-        $category = $revealedTile['category'];
+        $category = $revealedTile->category;
 
         if ($category === Game::CATEGORY_OPEN_WATER) {
             $nextDepth = $currentDepth + 1;
@@ -143,11 +132,11 @@ class PlayerDiveStep extends GameState
                     'player_id' => $activePlayerId,
                     'player_name' => $this->game->getPlayerNameById($activePlayerId),
                     'tile' => [
-                        'id' => (int) $revealedTile['tile_id'],
-                        'depth' => (int) $revealedTile['depth'],
-                        'category' => $revealedTile['category'],
-                        'foodColor' => $revealedTile['food_color'],
-                        'points' => (int) $revealedTile['points'],
+                        'id' => $revealedTile->id,
+                        'depth' => $revealedTile->depth,
+                        'category' => $revealedTile->category,
+                        'foodColor' => $revealedTile->foodColor,
+                        'points' => $revealedTile->points,
                     ],
                     'tile_desc' => $this->getTileDescription($revealedTile),
                 ]);
@@ -158,7 +147,7 @@ class PlayerDiveStep extends GameState
             }
         } elseif ($category === Game::CATEGORY_PREDATOR) {
             $this->playerStats->inc('predators_hit', 1, $activePlayerId);
-            $trappedTotal = $this->game->trapPenguin($activePlayerId, $tileId, $currentDepth);
+            $trappedTotal = $this->game->trapPenguin($activePlayerId, $tileId);
 
             $this->notify->all('predatorTrapped', clienttranslate('${player_name} encountered a Predator at Depth ${depth}! A penguin is trapped! (${trappedTotal}/3 trapped)'), [
                 'player_id' => $activePlayerId,
@@ -173,12 +162,8 @@ class PlayerDiveStep extends GameState
                 // Identify eligible faceup tiles across depths of trapped penguins
                 $trappedPenguins = $this->game->getTrappedPenguins($activePlayerId);
                 $trappedDepths = array_unique(array_map(fn($p) => (int) $p['depth'], $trappedPenguins));
-                $depthList = implode(",", $trappedDepths);
 
-                $eligibleTiles = $this->game->getCollectionFromDb(
-                    "SELECT `tile_id` FROM `ocean_tile`
-                     WHERE `location` = 'ocean' AND `is_faceup` = 1 AND `category` IN ('food', 'rock') AND `depth` IN ({$depthList})"
-                );
+                $eligibleTiles = $this->game->tileManager->getEligibleRetreatTiles(array_values($trappedDepths));
 
                 if (!empty($eligibleTiles)) {
                     return RetreatPickTile::class;
@@ -210,10 +195,10 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile['location'] !== 'ocean' || (int) $tile['depth'] !== $currentDepth || (int) $tile['is_faceup'] !== 1) {
+        if ($tile->location !== OceanTile::LOCATION_OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be taken'));
         }
-        if (!in_array($tile['category'], [Game::CATEGORY_FOOD, Game::CATEGORY_ROCK])) {
+        if (!in_array($tile->category, [Game::CATEGORY_FOOD, Game::CATEGORY_ROCK])) {
             throw new UserException(clienttranslate('Only Food or Rock tiles can be taken'));
         }
 
@@ -223,11 +208,11 @@ class PlayerDiveStep extends GameState
             'player_id' => $activePlayerId,
             'player_name' => $this->game->getPlayerNameById($activePlayerId),
             'tile' => [
-                'id' => (int) $collected['tile_id'],
-                'depth' => (int) $collected['depth'],
-                'category' => $collected['category'],
-                'foodColor' => $collected['food_color'],
-                'points' => (int) $collected['points'],
+                'id' => $collected->id,
+                'depth' => $collected->depth,
+                'category' => $collected->category,
+                'foodColor' => $collected->foodColor,
+                'points' => $collected->points,
             ],
             'tile_desc' => $this->getTileDescription($collected),
             'depth' => $currentDepth,
@@ -270,14 +255,12 @@ class PlayerDiveStep extends GameState
         }
 
         // Discard 1 rock
-        $rockTile = $this->game->getObjectFromDB(
-            "SELECT `tile_id` FROM `ocean_tile` WHERE `owner_id` = {$activePlayerId} AND `location` = 'rock' LIMIT 1"
-        );
+        $rockTile = $this->game->tileManager->getPlayerRockTile($activePlayerId);
         if (!$rockTile) {
             throw new UserException(clienttranslate('No rock available'));
         }
 
-        Game::DbQuery("UPDATE `ocean_tile` SET `location` = 'box', `owner_id` = NULL WHERE `tile_id` = {$rockTile['tile_id']}");
+        $this->game->tileManager->moveTileToBox($rockTile);
         $this->playerStats->inc('rocks_used', 1, $activePlayerId);
         $this->globals->set('usedRockThisTurn', true);
         $this->globals->set('currentDepth', $targetDepth);
@@ -285,7 +268,7 @@ class PlayerDiveStep extends GameState
         $this->notify->all('rockIngested', clienttranslate('${player_name} ingests a Rock Tile to plunge straight down to Depth ${targetDepth}!'), [
             'player_id' => $activePlayerId,
             'player_name' => $this->game->getPlayerNameById($activePlayerId),
-            'rockTileId' => (int) $rockTile['tile_id'],
+            'rockTileId' => (int) $rockTile->id,
             'targetDepth' => $targetDepth,
         ]);
 
@@ -307,16 +290,16 @@ class PlayerDiveStep extends GameState
         return NextPlayer::class;
     }
 
-    private function getTileDescription(array $tile): string
+    private function getTileDescription(OceanTile $tile): string
     {
-        return match ($tile['category']) {
+        return match ($tile->category) {
             Game::CATEGORY_OPEN_WATER => clienttranslate('Open Water'),
             Game::CATEGORY_ROCK => clienttranslate('Rock'),
             Game::CATEGORY_PREDATOR => clienttranslate('Predator'),
             Game::CATEGORY_FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
-                ucfirst((string) $tile['food_color']),
-                (int) $tile['points']
+                ucfirst((string) $tile->foodColor),
+                (int) $tile->points
             ),
             default => clienttranslate('Tile'),
         };

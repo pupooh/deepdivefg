@@ -9,6 +9,7 @@ use Bga\GameFramework\States\GameState;
 use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
+use Bga\Games\DeepDiveFG\OceanTile;
 
 class ConfirmFlipOrDive extends GameState
 {
@@ -33,15 +34,7 @@ class ConfirmFlipOrDive extends GameState
         return [
             'currentDepth' => $currentDepth,
             'nextDepth' => $currentDepth + 1,
-            'flippedTile' => $tile ? [
-                'id' => (int) $tile['tile_id'],
-                'depth' => (int) $tile['depth'],
-                'category' => $tile['category'],
-                'foodColor' => $tile['food_color'],
-                'points' => (int) $tile['points'],
-                'isExtra' => (bool) $tile['is_extra'],
-                'isFaceup' => true,
-            ] : null,
+            'flippedTile' => $tile ? $tile->toArray() : null,
         ];
     }
 
@@ -62,11 +55,11 @@ class ConfirmFlipOrDive extends GameState
             'player_id' => $activePlayerId,
             'player_name' => $this->game->getPlayerNameById($activePlayerId),
             'tile' => [
-                'id' => (int) $collected['tile_id'],
-                'depth' => (int) $collected['depth'],
-                'category' => $collected['category'],
-                'foodColor' => $collected['food_color'],
-                'points' => (int) $collected['points'],
+                'id' => $collected->id,
+                'depth' => $collected->depth,
+                'category' => $collected->category,
+                'foodColor' => $collected->foodColor,
+                'points' => $collected->points,
             ],
             'tile_desc' => $this->getTileDescription($collected),
             'depth' => $currentDepth,
@@ -103,14 +96,14 @@ class ConfirmFlipOrDive extends GameState
         return $this->actKeepFlipped($playerId);
     }
 
-    private function getTileDescription(array $tile): string
+    private function getTileDescription(OceanTile $tile): string
     {
-        return match ($tile['category']) {
+        return match ($tile->category) {
             Game::CATEGORY_ROCK => clienttranslate('Rock'),
             Game::CATEGORY_FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
-                ucfirst((string) $tile['food_color']),
-                (int) $tile['points']
+                ucfirst((string) $tile->foodColor),
+                (int) $tile->points
             ),
             default => clienttranslate('Tile'),
         };
