@@ -220,6 +220,17 @@ html {
   border-color: #caf0f8;
   color: #caf0f8;
 }
+.dd-tile .bga-cards_card-side.tile-facedown::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("img/tile-back-wave.webp");
+  background-size: 130px 130px;
+  background-position: center;
+  opacity: 0.5;
+  border-radius: 8px;
+  pointer-events: none;
+}
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-1 {
   background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%);
 }
@@ -240,10 +251,6 @@ html {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-.dd-tile .bga-cards_card-side.tile-facedown .tile-wave-pattern {
-  font-size: 13px;
-  opacity: 0.8;
 }
 .dd-tile .bga-cards_card-side.depth-front-1 {
   background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%);
@@ -270,14 +277,6 @@ html {
   border-color: #1a164b;
   color: #ffffff;
 }
-.dd-tile .bga-cards_card-side.tile-food .tile-food-icon {
-  font-size: 24px;
-  line-height: 1;
-}
-.dd-tile .bga-cards_card-side.tile-food .tile-school-fish {
-  font-size: 14px;
-  letter-spacing: 1px;
-}
 .dd-tile .bga-cards_card-side.tile-food .tile-points-badge {
   position: absolute;
   top: 3px;
@@ -290,26 +289,80 @@ html {
   color: #000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
-.dd-tile .bga-cards_card-side .animal-pink {
-  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(300deg);
+.dd-tile .bga-cards_card-side .tile-animal-img {
+  width: 46px;
+  height: 46px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  flex: 0 0 auto;
 }
-.dd-tile .bga-cards_card-side .animal-green {
-  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(85deg);
+.dd-tile .bga-cards_card-side .animal-shrimp-pink {
+  background-image: url("img/animal-shrimp-pink.webp");
 }
-.dd-tile .bga-cards_card-side .animal-yellow {
-  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(20deg);
+.dd-tile .bga-cards_card-side .animal-shrimp-green {
+  background-image: url("img/animal-shrimp-green.webp");
+}
+.dd-tile .bga-cards_card-side .animal-shrimp-yellow {
+  background-image: url("img/animal-shrimp-yellow.webp");
+}
+.dd-tile .bga-cards_card-side .animal-crab-pink {
+  background-image: url("img/animal-crab-pink.webp");
+}
+.dd-tile .bga-cards_card-side .animal-crab-green {
+  background-image: url("img/animal-crab-green.webp");
+}
+.dd-tile .bga-cards_card-side .animal-crab-yellow {
+  background-image: url("img/animal-crab-yellow.webp");
+}
+.dd-tile .bga-cards_card-side .animal-school-pink {
+  background-image: url("img/animal-school-pink.webp");
+}
+.dd-tile .bga-cards_card-side .animal-school-green {
+  background-image: url("img/animal-school-green.webp");
+}
+.dd-tile .bga-cards_card-side .animal-school-yellow {
+  background-image: url("img/animal-school-yellow.webp");
+}
+.dd-tile .bga-cards_card-side .animal-fish-pink {
+  background-image: url("img/animal-fish-pink.webp");
+}
+.dd-tile .bga-cards_card-side .animal-fish-green {
+  background-image: url("img/animal-fish-green.webp");
+}
+.dd-tile .bga-cards_card-side .animal-fish-yellow {
+  background-image: url("img/animal-fish-yellow.webp");
+}
+.dd-tile .bga-cards_card-side .animal-squid-pink {
+  background-image: url("img/animal-squid-pink.webp");
+}
+.dd-tile .bga-cards_card-side .animal-squid-green {
+  background-image: url("img/animal-squid-green.webp");
+}
+.dd-tile .bga-cards_card-side .animal-squid-yellow {
+  background-image: url("img/animal-squid-yellow.webp");
+}
+.dd-tile .bga-cards_card-side .tile-rock-img {
+  background-image: url("img/rock.webp");
+}
+.dd-tile .bga-cards_card-side .tile-bubbles-img {
+  background-image: url("img/bubbles.webp");
+}
+.dd-tile .bga-cards_card-side .predator-shark {
+  background-image: url("img/predator-shark.webp");
 }
 .dd-tile .bga-cards_card-side .animal-orange {
   filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-5deg);
 }
-.dd-tile .bga-cards_card-side.tile-rock .tile-icon {
-  font-size: 26px;
-}
-.dd-tile .bga-cards_card-side.tile-open_water .tile-icon {
-  font-size: 24px;
-}
 .dd-tile .bga-cards_card-side.tile-predator .tile-icon {
   font-size: 24px;
+}
+.dd-tile .bga-cards_card-side.tile-predator .tile-predator-warning {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 13px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
 }
 .dd-tile .bga-cards_card-side.tile-predator .tile-trapped-dock {
   display: flex;
@@ -327,8 +380,43 @@ html {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
+.penguin-meeple {
+  display: inline-block;
+  width: 18px;
+  height: 25px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  vertical-align: middle;
+}
+
+.penguin-magenta {
+  background-image: url("img/penguin-magenta.webp");
+}
+
+.penguin-green {
+  background-image: url("img/penguin-green.webp");
+}
+
+.penguin-blue {
+  background-image: url("img/penguin-blue.webp");
+}
+
+.penguin-yellow {
+  background-image: url("img/penguin-yellow.webp");
+}
+
+.penguin-purple {
+  background-image: url("img/penguin-purple.webp");
+}
+
+.penguin-orange {
+  background-image: url("img/penguin-orange.webp");
+}
+
 .trapped-penguin-meeple {
-  font-size: 16px;
+  width: 14px;
+  height: 20px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
   animation: dd-shake 0.8s infinite ease-in-out;
 }

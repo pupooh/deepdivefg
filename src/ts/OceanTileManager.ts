@@ -56,11 +56,9 @@ function tileFaceClasses(tile: OceanTile): string {
 
 /** Inner HTML of a facedown tile's back side. */
 function renderTileBackInnerHtml(tile: OceanTile): string {
-    return `
-        <div class="tile-back-inner">
-            <span class="tile-wave-pattern">〰️</span>
-        </div>
-    `;
+    // The wave texture is the back's background image (see Game.scss
+    // .tile-facedown::before); no inner content needed.
+    return `<div class="tile-back-inner"></div>`;
 }
 
 /** Inner HTML of a faceup tile's front side. */
@@ -70,41 +68,38 @@ function renderTileFrontInnerHtml(tile: OceanTile): string {
 
     if (cat === 'food') {
         const color = tile.foodColor || 'pink';
-        // Animal by depth; tinted to the food color by the animal-{color}
-        // CSS filter (see Game.scss).
-        const depthIcons: Record<number, string> = {
-            1: '🦐', // shrimp
-            2: '🦀', // crab
-            4: '🐟', // fish
-            5: '🦑', // squid
+        // Animal by depth, in its food color: rulebook art
+        // (img/animal-{species}-{color}.webp).
+        const speciesByDepth: Record<number, string> = {
+            1: 'shrimp',
+            2: 'crab',
+            3: 'school',
+            4: 'fish',
+            5: 'squid',
         };
-        const icon = tile.depth === 3
-            ? `<span class="tile-school-fish">🐟🐟🐟</span>` // school of fish
-            : (depthIcons[tile.depth] || '🐟');
+        const species = speciesByDepth[tile.depth] || 'fish';
         innerHtml = `
-            <div class="tile-food-icon animal-${color}">${icon}</div>
+            <div class="tile-animal-img animal-${species}-${color}"></div>
             <div class="tile-points-badge">${tile.points}</div>
         `;
     } else if (cat === 'rock') {
         innerHtml = `
-            <div class="tile-icon">🪨</div>
+            <div class="tile-animal-img tile-rock-img"></div>
         `;
     } else if (cat === 'open_water') {
         innerHtml = `
-            <div class="tile-icon">🌊</div>
+            <div class="tile-animal-img tile-bubbles-img"></div>
         `;
     } else if (cat === 'predator') {
-        // Predator animal by depth, always orange (animal-orange filter).
-        const predatorIcons: Record<number, string> = {
-            1: '🦭', // seal
-            2: '🦭', // seal
-            3: '🐋', // killer whale
-            4: '🐋', // killer whale
-            5: '🦈', // great white shark
-        };
-        const icon = predatorIcons[tile.depth] || '🦈';
+        // Predator animal by depth. D5 uses the rulebook's orange shark art;
+        // seal (D1-D2) and killer whale (D3-D4) have no art in the rulebook,
+        // so they keep the emoji, tinted orange.
+        const icon = tile.depth === 5
+            ? `<div class="tile-animal-img predator-shark"></div>`
+            : `<div class="tile-icon animal-orange">${tile.depth <= 2 ? '🦭' : '🐋'}</div>`;
         innerHtml = `
-            <div class="tile-icon animal-orange">${icon}</div>
+            ${icon}
+            <span class="tile-predator-warning" title="${_('Predator')}">⚠️</span>
             <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
         `;
     }

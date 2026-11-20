@@ -209,6 +209,19 @@ html {
         border-color: #caf0f8;
         color: #caf0f8;
 
+        // Rulebook wave texture, overlaid on the depth gradient.
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url('img/tile-back-wave.webp');
+            background-size: 130px 130px;
+            background-position: center;
+            opacity: 0.5;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
         &.depth-back-1 { background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%); }
         &.depth-back-2 { background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%); }
         &.depth-back-3 { background: linear-gradient(135deg, #023e8a 0%, #03045e 100%); }
@@ -220,10 +233,6 @@ html {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-        }
-        .tile-wave-pattern {
-            font-size: 13px;
-            opacity: 0.8;
         }
     }
 
@@ -237,15 +246,6 @@ html {
 
     // Food Tiles
     &.tile-food {
-        .tile-food-icon {
-            font-size: 24px;
-            line-height: 1;
-        }
-        // School of fish (depth 3): three small fish in one icon slot.
-        .tile-school-fish {
-            font-size: 14px;
-            letter-spacing: 1px;
-        }
         .tile-points-badge {
             position: absolute;
             top: 3px;
@@ -260,28 +260,42 @@ html {
         }
     }
 
-    // Animal tinted to its food color (or orange for predators):
-    // grayscale the emoji, then sepia + hue-rotate to the target hue.
-    // Sepia's base hue is ~35deg, so pink (~335deg) needs +300deg,
-    // green (~120deg) +85deg, yellow (~55deg) +20deg, orange (~30deg) -5deg.
-    .animal-pink { filter: grayscale(1) sepia(1) saturate(5) hue-rotate(300deg); }
-    .animal-green { filter: grayscale(1) sepia(1) saturate(5) hue-rotate(85deg); }
-    .animal-yellow { filter: grayscale(1) sepia(1) saturate(5) hue-rotate(20deg); }
+    // Tile art (rulebook images in img/): the animal is a background image
+    // on a fixed box, so it scales cleanly for every species and color.
+    .tile-animal-img {
+        width: 46px;
+        height: 46px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        flex: 0 0 auto;
+    }
+    @each $species in shrimp, crab, school, fish, squid {
+        @each $color in "pink", "green", "yellow" {
+            .animal-#{$species}-#{$color} { background-image: url('img/animal-#{$species}-#{$color}.webp'); }
+        }
+    }
+    .tile-rock-img { background-image: url('img/rock.webp'); }
+    .tile-bubbles-img { background-image: url('img/bubbles.webp'); }
+    .predator-shark { background-image: url('img/predator-shark.webp'); }
+
+    // Predator seal / killer whale have no art in the rulebook, so they
+    // keep the emoji, tinted orange like the shark (grayscale + sepia +
+    // hue-rotate; sepia's base hue is ~35deg, orange ~30deg needs -5deg).
     .animal-orange { filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-5deg); }
 
-    // Rock Tile
-    &.tile-rock {
-        .tile-icon { font-size: 26px; }
-    }
-
-    // Open Water Tile
-    &.tile-open_water {
-        .tile-icon { font-size: 24px; }
-    }
-
-    // Predator Tile
+    // Predator Tile (rock / open water use tile art now, no .tile-icon)
     &.tile-predator {
         .tile-icon { font-size: 24px; }
+
+        // Rulebook warning triangle (bottom-right of predator tiles).
+        .tile-predator-warning {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 13px;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
+        }
 
         .tile-trapped-dock {
             display: flex;
@@ -303,8 +317,23 @@ html {
     }
 }
 
+// Penguin meeples (rulebook art in img/): one image per player color.
+.penguin-meeple {
+    display: inline-block;
+    width: 18px;
+    height: 25px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    vertical-align: middle;
+}
+@each $color in "magenta", "green", "blue", "yellow", "purple", "orange" {
+    .penguin-#{$color} { background-image: url('img/penguin-#{$color}.webp'); }
+}
+
 .trapped-penguin-meeple {
-    font-size: 16px;
+    width: 14px;
+    height: 20px;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
     animation: dd-shake 0.8s infinite ease-in-out;
 }

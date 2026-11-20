@@ -8,6 +8,27 @@ import { OceanTileManager } from "./OceanTileManager";
 /** Pseudo-player id for the solo AI opponent (no tableau UI). */
 const AI_PLAYER_ID = 9999;
 
+/** Meeple color name for a player's hex color (gameinfos player_colors). */
+function penguinColorName(colorHex: string): string {
+    const map: Record<string, string> = {
+        a12167: 'magenta',
+        '6a9f44': 'green',
+        '3e90bc': 'blue',
+        cac42f: 'yellow',
+        '55366f': 'purple',
+        aa4026: 'orange',
+    };
+    return map[(colorHex || '').toLowerCase()] || 'blue';
+}
+
+/** HTML for `count` penguin meeples in the player's color. */
+function penguinMeeplesHtml(playerColorHex: string, count: number): string {
+    const name = penguinColorName(playerColorHex);
+    return Array.from({ length: Math.max(0, count) }, () =>
+        `<span class="penguin-meeple penguin-${name}"></span>`
+    ).join('');
+}
+
 export class Game {
     public bga: Bga<DeepDiveFGPlayer, DeepDiveFGGamedatas>;
     private gamedatas: DeepDiveFGGamedatas;
@@ -100,7 +121,7 @@ export class Game {
                 panel.insertAdjacentHTML('beforeend', `
                     <div class="dd-player-panel-extra" id="dd-panel-extra-${playerId}">
                         <div class="dd-panel-row">
-                            <span class="dd-icon-penguin" title="${_('Available Penguins')}">🐧 <strong id="dd-panel-penguins-${playerId}">${tableau ? tableau.availablePenguinsCount : 3}</strong>/3</span>
+                            <span class="dd-icon-penguin" title="${_('Available Penguins')}"><span id="dd-panel-penguins-${playerId}">${penguinMeeplesHtml(player.color, tableau ? tableau.availablePenguinsCount : 3)}</span></span>
                             <span class="dd-icon-rock" title="${_('Held Rocks')}">🪨 <strong id="dd-panel-rocks-${playerId}">${tableau ? tableau.rockCount : 0}</strong></span>
                         </div>
                         <div class="dd-panel-row">
@@ -252,7 +273,7 @@ export class Game {
                 <div class="dd-tableau-header">
                     <span class="dd-player-name" style="color: #${player.color}; font-weight: bold;">${player.name}</span>
                     <div class="dd-tableau-stats">
-                        <span class="dd-stat-penguins" title="${_('Available Penguins')}">🐧 <span id="dd-avail-penguins-${playerId}">${tableau ? tableau.availablePenguinsCount : 3}</span>/3</span>
+                        <span class="dd-stat-penguins" title="${_('Available Penguins')}"><span id="dd-avail-penguins-${playerId}">${penguinMeeplesHtml(player.color, tableau ? tableau.availablePenguinsCount : 3)}</span></span>
                         <span class="dd-stat-rocks" title="${_('Held Rocks')}">🪨 <span id="dd-held-rocks-${playerId}">${tableau ? tableau.rockCount : 0}</span></span>
                         <span class="dd-rock-stock-anchor" id="dd-rock-stock-${playerId}"></span>
                         <span class="dd-stat-score" title="${_('Total Points')}">⭐ <span id="dd-total-score-${playerId}">${tableau ? tableau.score : 0}</span> pts</span>
@@ -490,10 +511,21 @@ export class Game {
                 const player = this.gamedatas.players[tp.playerId];
                 const color = player ? player.color : '000000';
                 dock.insertAdjacentHTML('beforeend', `
-                    <span class="trapped-penguin-meeple" style="color: #${color};" title="${player ? player.name : ''}">🐧</span>
+                    <span class="penguin-meeple trapped-penguin-meeple penguin-${penguinColorName(color)}" title="${player ? player.name : ''}"></span>
                 `);
             }
         }
+    }
+
+    /** Re-render the available-penguin meeples in the panel and tableau. */
+    private updateAvailablePenguins(playerId: number, avail: number) {
+        const player = this.gamedatas.players[playerId];
+        const color = player ? player.color : '3e90bc';
+        const html = penguinMeeplesHtml(color, avail);
+        const panelPenguins = document.getElementById(`dd-panel-penguins-${playerId}`);
+        if (panelPenguins) panelPenguins.innerHTML = html;
+        const availPenguins = document.getElementById(`dd-avail-penguins-${playerId}`);
+        if (availPenguins) availPenguins.innerHTML = html;
     }
 
     ///////////////////////////////////////////////////
@@ -660,11 +692,7 @@ export class Game {
         void this.stocksReady.then(() => this.updateAllTrappedPenguins());
 
         // Update available penguins in panel & tableau
-        const avail = Math.max(0, 3 - trappedTotal);
-        const panelPenguins = document.getElementById(`dd-panel-penguins-${player_id}`);
-        if (panelPenguins) panelPenguins.innerText = `${avail}`;
-        const availPenguins = document.getElementById(`dd-avail-penguins-${player_id}`);
-        if (availPenguins) availPenguins.innerText = `${avail}`;
+        this.updateAvailablePenguins(player_id, Math.max(0, 3 - trappedTotal));
     }
 
     public notif_penguinRetreat(notif: any) {
@@ -672,10 +700,7 @@ export class Game {
         const { player_id, rescuedTile } = args;
 
         // Reset penguin count to 3
-        const panelPenguins = document.getElementById(`dd-panel-penguins-${player_id}`);
-        if (panelPenguins) panelPenguins.innerText = `3`;
-        const availPenguins = document.getElementById(`dd-avail-penguins-${player_id}`);
-        if (availPenguins) availPenguins.innerText = `3`;
+        this.updateAvailablePenguins(player_id, 3);
 
         // All of this player's trapped penguins are freed; docks clear.
         this.trappedPenguins = this.trappedPenguins.filter(tp => tp.playerId !== player_id);
