@@ -41,8 +41,14 @@ class OceanTile
     #[ItemField(kind: ItemFieldKind::LOCATION, locationIndex: 0)]
     public string $location;
 
+    // NB: int|null on purpose, NOT int|string|null. ItemManager infers
+    // the locationArg storage/validation type from this property type, and
+    // a union containing string makes the framework expect string values
+    // ("expected string, got int" at game creation). Every locationArg we
+    // ever store is an int (depth 1..5, or a player id) or null, so ?int
+    // is the exact type — this matches the Hearts tutorial's Card class.
     #[ItemField(kind: ItemFieldKind::LOCATION, locationIndex: 1)]
-    public int|string|null $locationArg = null;
+    public ?int $locationArg = null;
 
     #[ItemField(kind: ItemFieldKind::ORDER)]
     public int $order = 0;

@@ -127,18 +127,19 @@ class PlayerDiveStep extends GameState
         } elseif ($category === Game::CATEGORY_FOOD || $category === Game::CATEGORY_ROCK) {
             if ($currentDepth === 5) {
                 // Auto-collect at depth 5
-                $this->game->collectTileForPlayer($tileId, $activePlayerId);
+                $collected = $this->game->collectTileForPlayer($tileId, $activePlayerId);
                 $this->notify->all('tileCollected', clienttranslate('${player_name} resurfaces from Depth 5 with ${tile_desc}!'), [
                     'player_id' => $activePlayerId,
                     'player_name' => $this->game->getPlayerNameById($activePlayerId),
                     'tile' => [
-                        'id' => $revealedTile->id,
-                        'depth' => $revealedTile->depth,
-                        'category' => $revealedTile->category,
-                        'foodColor' => $revealedTile->foodColor,
-                        'points' => $revealedTile->points,
+                        'id' => $collected->id,
+                        'depth' => $collected->depth,
+                        'category' => $collected->category,
+                        'foodColor' => $collected->foodColor,
+                        'points' => $collected->points,
+                        'rowIndex' => $collected->rowIndex,
                     ],
-                    'tile_desc' => $this->getTileDescription($revealedTile),
+                    'tile_desc' => $this->getTileDescription($collected),
                 ]);
                 return NextPlayer::class;
             } else {
@@ -213,6 +214,7 @@ class PlayerDiveStep extends GameState
                 'category' => $collected->category,
                 'foodColor' => $collected->foodColor,
                 'points' => $collected->points,
+                'rowIndex' => $collected->rowIndex,
             ],
             'tile_desc' => $this->getTileDescription($collected),
             'depth' => $currentDepth,

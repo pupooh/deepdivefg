@@ -120,16 +120,19 @@ class AiTurn extends GameState
                     $this->globals->set('soloTiebreakCandidateIds', array_map(fn(OceanTile $t) => $t->id, array_values($tied)));
                     return SoloChooseTiebreak::class;
                 } else {
-                    $this->game->collectTileForPlayer((int) $best->id, self::AI_PLAYER_ID);
+                    $collected = $this->game->collectTileForPlayer((int) $best->id, self::AI_PLAYER_ID);
                     $this->notify->all('tileCollected', clienttranslate('AI Opponent takes faceup ${tile_desc} from Depth ${depth}!'), [
                         'player_id' => self::AI_PLAYER_ID,
                         'player_name' => clienttranslate('AI Opponent'),
                         'tile' => [
-                            'id' => $best->id,
-                            'foodColor' => $best->foodColor,
-                            'points' => $best->points,
+                            'id' => $collected->id,
+                            'depth' => $collected->depth,
+                            'category' => $collected->category,
+                            'foodColor' => $collected->foodColor,
+                            'points' => $collected->points,
+                            'rowIndex' => $collected->rowIndex,
                         ],
-                        'tile_desc' => sprintf(clienttranslate('%s Food (%d pts)'), ucfirst((string) $best->foodColor), (int) $best->points),
+                        'tile_desc' => sprintf(clienttranslate('%s Food (%d pts)'), ucfirst((string) $collected->foodColor), (int) $collected->points),
                         'depth' => $targetDepth,
                     ]);
                 }
@@ -141,8 +144,9 @@ class AiTurn extends GameState
                 Game::CATEGORY_FOOD => OceanTile::LOCATION_TABLEAU,
                 default => OceanTile::LOCATION_TABLEAU,
             };
+            $collected = null;
             if ($category === Game::CATEGORY_FOOD) {
-                $this->game->collectTileForPlayer($tileId, self::AI_PLAYER_ID);
+                $collected = $this->game->collectTileForPlayer($tileId, self::AI_PLAYER_ID);
             } else {
                 $this->game->tileManager->moveTileToPlayerLocation($tile, $loc, self::AI_PLAYER_ID);
             }
@@ -156,6 +160,7 @@ class AiTurn extends GameState
                     'category' => $tile->category,
                     'foodColor' => $tile->foodColor,
                     'points' => $tile->points,
+                    'rowIndex' => $collected ? $collected->rowIndex : null,
                 ],
                 'tile_desc' => $this->getTileDescription($tile),
                 'depth' => $targetDepth,
