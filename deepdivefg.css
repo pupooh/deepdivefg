@@ -421,6 +421,12 @@ html {
   vertical-align: middle;
 }
 
+/* The sliding penguin is wide and short, so it gets a wider, shorter box. */
+.penguin-meeple.penguin-meeple-sliding {
+  width: 25px;
+  height: 13px;
+}
+
 .penguin-magenta {
   background-image: url("img/penguin-magenta.webp");
 }
@@ -443,6 +449,31 @@ html {
 
 .penguin-orange {
   background-image: url("img/penguin-orange.webp");
+}
+
+/* Running penguin: one image per player color. */
+.penguin-running-magenta {
+  background-image: url("img/penguin-running-magenta.webp");
+}
+
+.penguin-running-green {
+  background-image: url("img/penguin-running-green.webp");
+}
+
+.penguin-running-blue {
+  background-image: url("img/penguin-running-blue.webp");
+}
+
+.penguin-running-yellow {
+  background-image: url("img/penguin-running-yellow.webp");
+}
+
+.penguin-running-purple {
+  background-image: url("img/penguin-running-purple.webp");
+}
+
+.penguin-running-orange {
+  background-image: url("img/penguin-running-orange.webp");
 }
 
 /* Lying penguin (diving pose): one image per player color. */

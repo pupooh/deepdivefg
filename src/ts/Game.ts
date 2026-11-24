@@ -47,11 +47,19 @@ function penguinColorName(colorHex: string): string {
     return best;
 }
 
-/** HTML for `count` penguin meeples in the player's color. */
+/** HTML for `count` penguin meeples in the player's color: one of each
+ *  design (standing, running, sliding). When fewer than 3 are available
+ *  the sliding one is gone first (it is the diving penguin), then running. */
 function penguinMeeplesHtml(playerColorHex: string, count: number): string {
     const name = penguinColorName(playerColorHex);
-    return Array.from({ length: Math.max(0, count) }, () =>
-        `<span class="penguin-meeple penguin-${name}"></span>`
+    const designs: { suffix: string; extra: string }[] = [
+        { suffix: '', extra: '' },                                // standing
+        { suffix: '-running', extra: '' },                        // running
+        { suffix: '-lying', extra: ' penguin-meeple-sliding' },   // sliding (lying image)
+    ];
+    const n = Math.max(0, Math.min(3, count));
+    return designs.slice(0, n).map(d =>
+        `<span class="penguin-meeple${d.extra} penguin${d.suffix}-${name}"></span>`
     ).join('');
 }
 

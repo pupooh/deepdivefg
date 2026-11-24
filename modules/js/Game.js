@@ -261,10 +261,18 @@ function penguinColorName(colorHex) {
     }
     return best;
 }
-/** HTML for `count` penguin meeples in the player's color. */
+/** HTML for `count` penguin meeples in the player's color: one of each
+ *  design (standing, running, sliding). When fewer than 3 are available
+ *  the sliding one is gone first (it is the diving penguin), then running. */
 function penguinMeeplesHtml(playerColorHex, count) {
     const name = penguinColorName(playerColorHex);
-    return Array.from({ length: Math.max(0, count) }, () => `<span class="penguin-meeple penguin-${name}"></span>`).join('');
+    const designs = [
+        { suffix: '', extra: '' }, // standing
+        { suffix: '-running', extra: '' }, // running
+        { suffix: '-lying', extra: ' penguin-meeple-sliding' }, // sliding (lying image)
+    ];
+    const n = Math.max(0, Math.min(3, count));
+    return designs.slice(0, n).map(d => `<span class="penguin-meeple${d.extra} penguin${d.suffix}-${name}"></span>`).join('');
 }
 class Game {
     constructor(bga) {

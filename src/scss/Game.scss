@@ -331,8 +331,17 @@ html {
     background-position: center;
     vertical-align: middle;
 }
+/* The sliding penguin is wide and short, so it gets a wider, shorter box. */
+.penguin-meeple.penguin-meeple-sliding {
+    width: 25px;
+    height: 13px;
+}
 @each $color in "magenta", "green", "blue", "yellow", "purple", "orange" {
     .penguin-#{$color} { background-image: url('img/penguin-#{$color}.webp'); }
+}
+/* Running penguin: one image per player color. */
+@each $color in "magenta", "green", "blue", "yellow", "purple", "orange" {
+    .penguin-running-#{$color} { background-image: url('img/penguin-running-#{$color}.webp'); }
 }
 /* Lying penguin (diving pose): one image per player color. */
 @each $color in "magenta", "green", "blue", "yellow", "purple", "orange" {
