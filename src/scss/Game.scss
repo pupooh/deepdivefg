@@ -369,19 +369,17 @@ html {
 
 /* ========================================================
    Selectable Tiles (bga-cards setSelectionMode)
-   The selectable class lands on the outer .bga-cards_card; the visible
-   border/glow live on .bga-cards_card-side, so rules target that.
-   No highlight while diving — the border/glow appear only when the player
-   hovers a selectable tile (the current depth's tiles).
+   The selectable class lands on the outer .bga-cards_card. No outline
+   while diving — the library's dashed orange outline appears only when
+   the player hovers a selectable tile (the current depth's tiles).
    ======================================================== */
 /* The library draws a 5px dashed orange outline on EVERY selectable card
    (.card-stock .bga-cards_selectable-card { outline: 5px dashed orange }),
    so while diving all of the current depth's tiles look highlighted.
-   Suppress it by default — the highlight appears only on hover (below).
-   Set outline-style explicitly (not just the outline shorthand) and zero
-   the library's own outline-size variable, so the computed outline-style
-   is none. */
-.bga-cards_selectable-card {
+   Suppress it by default, but let the library's dashed outline show on
+   hover — the suppression is scoped to :not(:hover), so hovering a
+   selectable tile restores the 5px dashed orange outline. */
+.bga-cards_selectable-card:not(:hover) {
     --bga-cards_selectable-card_outline-size: 0;
     outline: none !important;
     outline-style: none !important;
@@ -390,10 +388,6 @@ html {
 .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover {
     transform: translateY(-4px) scale(1.08);
     z-index: 10;
-}
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover .bga-cards_card-side {
-    border-color: #ffd166 !important;
-    box-shadow: 0 6px 14px rgba(255, 209, 102, 0.9) !important;
 }
 
 @keyframes dd-waddle {
