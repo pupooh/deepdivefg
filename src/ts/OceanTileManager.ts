@@ -91,14 +91,13 @@ function renderTileFrontInnerHtml(tile: OceanTile): string {
             <div class="tile-animal-img tile-bubbles-img"></div>
         `;
     } else if (cat === 'predator') {
-        // Predator animal by depth. D5 uses the rulebook's orange shark art;
-        // seal (D1-D2) and killer whale (D3-D4) have no art in the rulebook,
-        // so they keep the emoji, tinted orange.
-        const icon = tile.depth === 5
-            ? `<div class="tile-animal-img predator-shark"></div>`
-            : `<div class="tile-icon animal-orange">${tile.depth <= 2 ? '🦭' : '🐋'}</div>`;
+        // Predator animal by depth, rulebook art (img/predator-{animal}-d{N}.webp):
+        // seal D1-D2, killer whale D3-D4, shark D5.
+        const predatorImg = tile.depth === 5 ? 'predator-shark'
+            : tile.depth <= 2 ? `predator-seal-d${tile.depth}`
+            : `predator-orca-d${tile.depth}`;
         innerHtml = `
-            ${icon}
+            <div class="tile-animal-img ${predatorImg}"></div>
             <span class="tile-predator-warning" title="${_('Predator')}">⚠️</span>
             <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
         `;

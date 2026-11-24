@@ -1,3 +1,4 @@
+@charset "UTF-8";
 /**
  * Deep Dive - BGA Stylesheet
  * High-fidelity pure CSS/SVG visual identity
@@ -164,9 +165,26 @@ html {
 }
 
 .dd-diving-penguin {
-  font-size: 22px;
+  display: inline-block;
+  width: 34px;
+  height: 18px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
   animation: dd-waddle 1.4s infinite ease-in-out;
+}
+
+/* Diving penguin moved onto a selected tile: centered on the bottom edge.
+   Centered with left/right + auto margins (no transform — dd-waddle owns
+   the transform, so a translateX here would be overwritten by the animation). */
+.dd-diving-penguin.dd-on-tile {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  z-index: 5;
 }
 
 .dd-depth-exhausted-badge {
@@ -216,35 +234,29 @@ html {
   transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
 }
 .dd-tile .bga-cards_card-side.tile-facedown {
-  background: linear-gradient(135deg, #134074 0%, #0b2545 100%);
+  background-color: #0b2545;
   border-color: #caf0f8;
   color: #caf0f8;
 }
-.dd-tile .bga-cards_card-side.tile-facedown::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("img/tile-back-wave.webp");
-  background-size: 130px 130px;
-  background-position: center;
-  opacity: 0.5;
-  border-radius: 8px;
-  pointer-events: none;
-}
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-1 {
-  background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%);
+  background-image: url("img/tile-bg-d1-back.webp");
+  background-size: cover;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-2 {
-  background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);
+  background-image: url("img/tile-bg-d2-back.webp");
+  background-size: cover;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-3 {
-  background: linear-gradient(135deg, #023e8a 0%, #03045e 100%);
+  background-image: url("img/tile-bg-d3-back.webp");
+  background-size: cover;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-4 {
-  background: linear-gradient(135deg, #03045e 0%, #081c3b 100%);
+  background-image: url("img/tile-bg-d4-back.webp");
+  background-size: cover;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-5 {
-  background: linear-gradient(135deg, #0b092b 0%, #020112 100%);
+  background-image: url("img/tile-bg-d5-back.webp");
+  background-size: cover;
 }
 .dd-tile .bga-cards_card-side.tile-facedown .tile-back-inner {
   display: flex;
@@ -253,27 +265,37 @@ html {
   justify-content: center;
 }
 .dd-tile .bga-cards_card-side.depth-front-1 {
-  background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%);
+  background-image: url("img/tile-bg-d1-front.webp");
+  background-size: cover;
+  background-color: #0096c7;
   border-color: #90e0ef;
   color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.depth-front-2 {
-  background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);
+  background-image: url("img/tile-bg-d2-front.webp");
+  background-size: cover;
+  background-color: #0077b6;
   border-color: #48cae4;
   color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.depth-front-3 {
-  background: linear-gradient(135deg, #023e8a 0%, #03045e 100%);
+  background-image: url("img/tile-bg-d3-front.webp");
+  background-size: cover;
+  background-color: #023e8a;
   border-color: #48cae4;
   color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.depth-front-4 {
-  background: linear-gradient(135deg, #03045e 0%, #081c3b 100%);
+  background-image: url("img/tile-bg-d4-front.webp");
+  background-size: cover;
+  background-color: #03045e;
   border-color: #03045e;
   color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.depth-front-5 {
-  background: linear-gradient(135deg, #0b092b 0%, #020112 100%);
+  background-image: url("img/tile-bg-d5-front.webp");
+  background-size: cover;
+  background-color: #0b092b;
   border-color: #1a164b;
   color: #ffffff;
 }
@@ -351,8 +373,17 @@ html {
 .dd-tile .bga-cards_card-side .predator-shark {
   background-image: url("img/predator-shark.webp");
 }
-.dd-tile .bga-cards_card-side .animal-orange {
-  filter: grayscale(1) sepia(1) saturate(6) hue-rotate(-5deg);
+.dd-tile .bga-cards_card-side .predator-seal-d1 {
+  background-image: url("img/predator-seal-d1.webp");
+}
+.dd-tile .bga-cards_card-side .predator-seal-d2 {
+  background-image: url("img/predator-seal-d2.webp");
+}
+.dd-tile .bga-cards_card-side .predator-orca-d3 {
+  background-image: url("img/predator-orca-d3.webp");
+}
+.dd-tile .bga-cards_card-side .predator-orca-d4 {
+  background-image: url("img/predator-orca-d4.webp");
 }
 .dd-tile .bga-cards_card-side.tile-predator .tile-icon {
   font-size: 24px;
@@ -414,6 +445,31 @@ html {
   background-image: url("img/penguin-orange.webp");
 }
 
+/* Lying penguin (diving pose): one image per player color. */
+.penguin-lying-magenta {
+  background-image: url("img/penguin-lying-magenta.webp");
+}
+
+.penguin-lying-green {
+  background-image: url("img/penguin-lying-green.webp");
+}
+
+.penguin-lying-blue {
+  background-image: url("img/penguin-lying-blue.webp");
+}
+
+.penguin-lying-yellow {
+  background-image: url("img/penguin-lying-yellow.webp");
+}
+
+.penguin-lying-purple {
+  background-image: url("img/penguin-lying-purple.webp");
+}
+
+.penguin-lying-orange {
+  background-image: url("img/penguin-lying-orange.webp");
+}
+
 .trapped-penguin-meeple {
   width: 14px;
   height: 20px;
@@ -436,29 +492,17 @@ html {
    Selectable Tiles (bga-cards setSelectionMode)
    The selectable class lands on the outer .bga-cards_card; the visible
    border/glow live on .bga-cards_card-side, so rules target that.
+   No highlight while diving — the border/glow appear only when the player
+   hovers a selectable tile (the current depth's tiles).
    ======================================================== */
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card) .bga-cards_card-side {
-  border-color: #ffd166 !important;
-  box-shadow: 0 0 10px rgba(255, 209, 102, 0.75) !important;
-}
-
 .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover {
   transform: translateY(-4px) scale(1.08);
   z-index: 10;
 }
 
 .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover .bga-cards_card-side {
+  border-color: #ffd166 !important;
   box-shadow: 0 6px 14px rgba(255, 209, 102, 0.9) !important;
-}
-
-.dd-tile.clickable-flip .bga-cards_card-side {
-  border-color: #00f0ff !important;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.8) !important;
-}
-
-.dd-tile.clickable-take .bga-cards_card-side {
-  border-color: #2ec4b6 !important;
-  box-shadow: 0 0 12px rgba(46, 196, 182, 0.8) !important;
 }
 
 @keyframes dd-waddle {
@@ -556,33 +600,36 @@ html {
 }
 
 .dd-tableau-row {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 6px 8px;
-  background: #fafafa;
-  transition: all 0.2s;
-}
-.dd-tableau-row.row-complete {
-  background: #f0fdf4;
-  border-color: #86efac;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15);
-}
-
-.dd-row-header {
   display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 68px;
+  padding: 0;
+}
+.dd-tableau-row.row-complete .dd-row-score-value {
+  color: #15803d;
+}
+.dd-tableau-row.row-incomplete .dd-row-score-value {
   color: #64748b;
-  margin-bottom: 4px;
 }
 
-.dd-row-score-badge {
-  background: #0b2545;
-  color: #fff;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
+.dd-row-equals {
+  font-size: 28px;
+  font-weight: 900;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+/* Set point value, as large as the tile itself (68px tall). No "pts" or
+   "(1/2)" label — when the set is not full the value is halved and the
+   reason lives in the title tooltip (set in the TS). */
+.dd-row-score-value {
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 68px;
+  min-width: 44px;
+  text-align: center;
 }
 
 .dd-row-slots {

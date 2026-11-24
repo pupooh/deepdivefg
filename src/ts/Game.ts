@@ -8,9 +8,13 @@ import { OceanTileManager } from "./OceanTileManager";
 /** Pseudo-player id for the solo AI opponent (no tableau UI). */
 const AI_PLAYER_ID = 9999;
 
-/** Meeple color name for a player's hex color (gameinfos player_colors). */
+/** Meeple color name for a player's hex color (gameinfos player_colors).
+ *  Exact match for the 6 meeple colors; otherwise the nearest meeple color
+ *  by RGB distance — older tables keep the default BGA colors, which must
+ *  still map to a meeple instead of falling back to blue. */
 function penguinColorName(colorHex: string): string {
-    const map: Record<string, string> = {
+    const hex = (colorHex || '').toLowerCase().replace(/^#/, '');
+    const exact: Record<string, string> = {
         a12167: 'magenta',
         '6a9f44': 'green',
         '3e90bc': 'blue',
@@ -18,7 +22,29 @@ function penguinColorName(colorHex: string): string {
         '55366f': 'purple',
         aa4026: 'orange',
     };
-    return map[(colorHex || '').toLowerCase()] || 'blue';
+    if (exact[hex]) return exact[hex];
+    if (!/^[0-9a-f]{6}$/.test(hex)) return 'blue';
+    const rgb: Record<string, [number, number, number]> = {
+        magenta: [0xa1, 0x21, 0x67],
+        green: [0x6a, 0x9f, 0x44],
+        blue: [0x3e, 0x90, 0xbc],
+        yellow: [0xca, 0xc4, 0x2f],
+        purple: [0x55, 0x36, 0x6f],
+        orange: [0xaa, 0x40, 0x26],
+    };
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    let best = 'blue';
+    let bestDist = Infinity;
+    for (const [name, [cr, cg, cb]] of Object.entries(rgb)) {
+        const dist = (r - cr) ** 2 + (g - cg) ** 2 + (b - cb) ** 2;
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = name;
+        }
+    }
+    return best;
 }
 
 /** HTML for `count` penguin meeples in the player's color. */
@@ -52,6 +78,8 @@ export class Game {
     /** Client-side tableau model: playerId -> rowIdx -> tiles. Mirrors the server rows. */
     private tableauModel: Record<number, Record<number, OceanTile[]>> = {};
     private trappedPenguins: TrappedPenguin[] = [];
+    /** The player whose penguin is currently diving (hidden from their tableau). */
+    private divingPlayerId: number | null = null;
     /** Resolves once the setup addCards calls have placed every tile. */
     private stocksReady: Promise<boolean[]> = Promise.resolve([]);
     /** Bumped by every set/clear interactivity call; stale async applies are ignored. */
@@ -79,6 +107,9 @@ export class Game {
         console.log("Starting Deep Dive setup", gamedatas);
         this.gamedatas = gamedatas;
         this.trappedPenguins = [...(gamedatas.trappedPenguins || [])];
+        // The active player's penguin is diving from the start of their turn
+        // (hidden from their tableau); setActiveDepth below confirms it.
+        this.divingPlayerId = this.bga.players.getActivePlayerId();
 
         // Client-side tableau model, built before the board HTML so row
         // shells render with their correct initial scores.
@@ -121,7 +152,7 @@ export class Game {
                 panel.insertAdjacentHTML('beforeend', `
                     <div class="dd-player-panel-extra" id="dd-panel-extra-${playerId}">
                         <div class="dd-panel-row">
-                            <span class="dd-icon-penguin" title="${_('Available Penguins')}"><span id="dd-panel-penguins-${playerId}">${penguinMeeplesHtml(player.color, tableau ? tableau.availablePenguinsCount : 3)}</span></span>
+                            <span class="dd-icon-penguin" title="${_('Available Penguins')}"><span id="dd-panel-penguins-${playerId}">${penguinMeeplesHtml(player.color, this.availablePenguinCount(playerId))}</span></span>
                             <span class="dd-icon-rock" title="${_('Held Rocks')}">🪨 <strong id="dd-panel-rocks-${playerId}">${tableau ? tableau.rockCount : 0}</strong></span>
                         </div>
                         <div class="dd-panel-row">
@@ -240,13 +271,13 @@ export class Game {
         const tiles = this.tableauModel[playerId]?.[rowIdx] || [];
         const sum = tiles.reduce((s, t) => s + (t.points || 0), 0);
         const isComplete = tiles.length === 3;
+        const value = isComplete ? sum : Math.floor(sum / 2);
+        const tooltip = isComplete ? '' : ` title="${_('Points halved — set not full')}: ${sum} ÷ 2 = ${value}"`;
         return `
             <div class="dd-tableau-row ${isComplete ? 'row-complete' : 'row-incomplete'}" id="dd-row-${playerId}-${rowIdx}">
-                <div class="dd-row-header">
-                    <span class="dd-row-label">${_('Set')} ${rowIdx}</span>
-                    <span class="dd-row-score-badge">${isComplete ? `${sum} pts` : `${Math.floor(sum / 2)} pts (½)`}</span>
-                </div>
                 <div class="dd-row-slots"></div>
+                <span class="dd-row-equals">=</span>
+                <span class="dd-row-score-value"${tooltip}>${value}</span>
             </div>
         `;
     }
@@ -273,7 +304,7 @@ export class Game {
                 <div class="dd-tableau-header">
                     <span class="dd-player-name" style="color: #${player.color}; font-weight: bold;">${player.name}</span>
                     <div class="dd-tableau-stats">
-                        <span class="dd-stat-penguins" title="${_('Available Penguins')}"><span id="dd-avail-penguins-${playerId}">${penguinMeeplesHtml(player.color, tableau ? tableau.availablePenguinsCount : 3)}</span></span>
+                        <span class="dd-stat-penguins" title="${_('Available Penguins')}"><span id="dd-avail-penguins-${playerId}">${penguinMeeplesHtml(player.color, this.availablePenguinCount(playerId))}</span></span>
                         <span class="dd-stat-rocks" title="${_('Held Rocks')}">🪨 <span id="dd-held-rocks-${playerId}">${tableau ? tableau.rockCount : 0}</span></span>
                         <span class="dd-rock-stock-anchor" id="dd-rock-stock-${playerId}"></span>
                         <span class="dd-stat-score" title="${_('Total Points')}">⭐ <span id="dd-total-score-${playerId}">${tableau ? tableau.score : 0}</span> pts</span>
@@ -341,17 +372,22 @@ export class Game {
         });
     }
 
-    /** Recompute one tableau row's badge/complete state and the player's totals. */
+    /** Recompute one tableau row's value/complete state and the player's totals. */
     private updateTableauRowDisplay(playerId: number, rowIdx: number): void {
         const tiles = this.tableauModel[playerId]?.[rowIdx] || [];
         const sum = tiles.reduce((s, t) => s + (t.points || 0), 0);
         const complete = tiles.length === 3;
+        const value = complete ? sum : Math.floor(sum / 2);
         const rowEl = document.getElementById(`dd-row-${playerId}-${rowIdx}`);
         if (rowEl) {
             rowEl.classList.toggle('row-complete', complete);
             rowEl.classList.toggle('row-incomplete', !complete);
-            const badge = rowEl.querySelector('.dd-row-score-badge');
-            if (badge) badge.textContent = complete ? `${sum} pts` : `${Math.floor(sum / 2)} pts (½)`;
+            const valueEl = rowEl.querySelector('.dd-row-score-value');
+            if (valueEl) {
+                valueEl.textContent = String(value);
+                if (complete) valueEl.removeAttribute('title');
+                else valueEl.setAttribute('title', `${_('Points halved — set not full')}: ${sum} ÷ 2 = ${value}`);
+            }
         }
 
         let total = 0;
@@ -392,12 +428,28 @@ export class Game {
             target.classList.add('active-depth');
         }
 
-        // Update diving penguin marker
-        document.querySelectorAll('.dd-depth-penguins').forEach(el => el.innerHTML = '');
+        // The active player's penguin is diving (hidden from their tableau).
+        this.setDivingPlayer(this.bga.players.getActivePlayerId());
+
+        // Update diving penguin marker: the lying meeple in the diving
+        // player's color (replaces the 🐧 emoji), waddle animation kept.
+        document.querySelectorAll('.dd-diving-penguin').forEach(el => el.remove());
         const activePenguinSlot = document.getElementById(`dd-depth-penguins-${depth}`);
         if (activePenguinSlot) {
-            activePenguinSlot.innerHTML = `<span class="dd-diving-penguin" title="${_('Diving Penguin')}">🐧</span>`;
+            const divingId = this.divingPlayerId;
+            const player = divingId !== null ? this.gamedatas.players[divingId] : null;
+            const colorName = player ? penguinColorName(player.color) : 'blue';
+            activePenguinSlot.innerHTML = `<span class="dd-diving-penguin penguin-lying-${colorName}" title="${_('Diving Penguin')}"></span>`;
         }
+    }
+
+    /** Move the diving penguin marker onto the selected tile's center-bottom. */
+    private moveDivingPenguinToTile(tile: OceanTile): void {
+        const marker = document.querySelector('.dd-diving-penguin') as HTMLElement | null;
+        const el = this.tileManager.getCardElement(tile);
+        if (!marker || !el) return;
+        marker.classList.add('dd-on-tile');
+        el.appendChild(marker);
     }
 
     public setDiveStepInteractivity(args: PlayerDiveStepArgs) {
@@ -407,8 +459,13 @@ export class Game {
 
         this.oceanClickHandler = (tile) => {
             if (token !== this.interactivityToken) return;
-            if (args.facedownIds.includes(tile.id)) this.performFlipTile(tile.id);
-            else if (args.takeableFaceupIds.includes(tile.id)) this.performTakeFaceup(tile.id);
+            if (args.facedownIds.includes(tile.id)) {
+                this.moveDivingPenguinToTile(tile);
+                this.performFlipTile(tile.id);
+            } else if (args.takeableFaceupIds.includes(tile.id)) {
+                this.moveDivingPenguinToTile(tile);
+                this.performTakeFaceup(tile.id);
+            }
         };
 
         this.applyWhenStocksReady(token, () => {
@@ -416,12 +473,6 @@ export class Game {
             if (!stock) return;
             const selectable = stock.getCards().filter(t => selectableIds.has(t.id));
             stock.setSelectionMode('single', selectable);
-            // Keep the old affordance colours: cyan = flip a facedown tile,
-            // teal = take a faceup tile.
-            for (const tile of selectable) {
-                const el = this.tileManager.getCardElement(tile);
-                el.classList.add(args.facedownIds.includes(tile.id) ? 'clickable-flip' : 'clickable-take');
-            }
         });
     }
 
@@ -433,7 +484,10 @@ export class Game {
             const tileId = args.flippedTile.id;
             this.oceanClickHandler = (tile) => {
                 if (token !== this.interactivityToken) return;
-                if (tile.id === tileId) this.performKeepFlipped();
+                if (tile.id === tileId) {
+                    this.moveDivingPenguinToTile(tile);
+                    this.performKeepFlipped();
+                }
             };
             this.applyWhenStocksReady(token, () => {
                 const stock = this.oceanStocks[args.currentDepth];
@@ -492,9 +546,9 @@ export class Game {
         for (const stock of Object.values(this.oceanStocks)) {
             stock.setSelectionMode('none');
         }
-        document.querySelectorAll('.dd-tile.clickable-flip, .dd-tile.clickable-take').forEach(el => {
-            el.classList.remove('clickable-flip', 'clickable-take');
-        });
+        // A penguin moved onto a tile goes back to the depth header on the
+        // next setActiveDepth; drop it here so it never lingers on a tile.
+        document.querySelectorAll('.dd-tile .dd-diving-penguin').forEach(el => el.remove());
         document.querySelectorAll('.clickable-depth').forEach(el => {
             el.classList.remove('clickable-depth');
             (el as HTMLElement).onclick = null;
@@ -517,11 +571,26 @@ export class Game {
         }
     }
 
+    /** Penguins shown as available: 3 - trapped - (1 while this player's penguin is diving). */
+    private availablePenguinCount(playerId: number): number {
+        const trapped = this.trappedPenguins.filter(tp => tp.playerId === playerId).length;
+        return Math.max(0, 3 - trapped - (this.divingPlayerId === playerId ? 1 : 0));
+    }
+
+    /** Set (or clear) the diving player, refreshing both players' meeple displays. */
+    private setDivingPlayer(playerId: number | null): void {
+        if (this.divingPlayerId === playerId) return;
+        const prev = this.divingPlayerId;
+        this.divingPlayerId = playerId;
+        if (prev !== null) this.updateAvailablePenguins(prev);
+        if (playerId !== null) this.updateAvailablePenguins(playerId);
+    }
+
     /** Re-render the available-penguin meeples in the panel and tableau. */
-    private updateAvailablePenguins(playerId: number, avail: number) {
+    private updateAvailablePenguins(playerId: number) {
         const player = this.gamedatas.players[playerId];
         const color = player ? player.color : '3e90bc';
-        const html = penguinMeeplesHtml(color, avail);
+        const html = penguinMeeplesHtml(color, this.availablePenguinCount(playerId));
         const panelPenguins = document.getElementById(`dd-panel-penguins-${playerId}`);
         if (panelPenguins) panelPenguins.innerHTML = html;
         const availPenguins = document.getElementById(`dd-avail-penguins-${playerId}`);
@@ -683,7 +752,7 @@ export class Game {
 
     public notif_predatorTrapped(notif: any) {
         const args = this.getNotifArgs<NotifPredatorTrapped>(notif);
-        const { player_id, tileId, trappedTotal, depth } = args;
+        const { player_id, tileId, depth } = args;
 
         if (!this.trappedPenguins.some(tp => tp.tileId === tileId && tp.playerId === player_id)) {
             this.trappedPenguins.push({ id: tileId, playerId: player_id, tileId, depth });
@@ -691,19 +760,21 @@ export class Game {
         // Docks live inside predator front divs; re-render once stocks exist.
         void this.stocksReady.then(() => this.updateAllTrappedPenguins());
 
-        // Update available penguins in panel & tableau
-        this.updateAvailablePenguins(player_id, Math.max(0, 3 - trappedTotal));
+        // The diving penguin is now trapped (no longer diving); update the
+        // available penguins in panel & tableau.
+        this.setDivingPlayer(null);
+        this.updateAvailablePenguins(player_id);
     }
 
     public notif_penguinRetreat(notif: any) {
         const args = this.getNotifArgs<NotifPenguinRetreat>(notif);
         const { player_id, rescuedTile } = args;
 
-        // Reset penguin count to 3
-        this.updateAvailablePenguins(player_id, 3);
-
-        // All of this player's trapped penguins are freed; docks clear.
+        // All of this player's trapped penguins are freed and the diving
+        // penguin is back — restore the available-penguin display.
         this.trappedPenguins = this.trappedPenguins.filter(tp => tp.playerId !== player_id);
+        this.setDivingPlayer(null);
+        this.updateAvailablePenguins(player_id);
 
         void this.stocksReady.then(() => {
             this.updateAllTrappedPenguins();
