@@ -11,19 +11,16 @@ export class ConfirmFlipOrDive {
         this.game.setActiveDepth(args.currentDepth);
 
         if (isCurrentPlayerActive && args.flippedTile) {
-            const tile = args.flippedTile;
-            const tileDesc = this.game.getTileDescription(tile);
-
             // Resurface button
             this.bga.statusBar.addActionButton(
-                _(`Resurface with ${tileDesc}`),
+                _(`Resurface`),
                 () => this.game.performKeepFlipped(),
                 { color: 'primary' }
             );
 
             // Dive deeper button
             this.bga.statusBar.addActionButton(
-                _(`Leave faceup & Dive to Depth ${args.nextDepth} ⬇️`),
+                _(`Dive deeper`),
                 () => this.game.performDiveDeeper(),
                 { color: 'secondary' }
             );
