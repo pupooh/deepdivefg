@@ -526,6 +526,14 @@ html {
    No highlight while diving — the border/glow appear only when the player
    hovers a selectable tile (the current depth's tiles).
    ======================================================== */
+/* The library draws a 5px dashed orange outline on EVERY selectable card
+   (.card-stock .bga-cards_selectable-card { outline: 5px dashed orange }),
+   so while diving all of the current depth's tiles look highlighted.
+   Suppress it by default — the highlight appears only on hover (below). */
+.card-stock .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card) {
+  outline: none !important;
+}
+
 .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover {
   transform: translateY(-4px) scale(1.08);
   z-index: 10;
