@@ -261,18 +261,20 @@ function penguinColorName(colorHex) {
     }
     return best;
 }
+/** The three penguin designs, in the order they stay available. */
+const PENGUIN_DESIGN_SUFFIX = ['', '-running', '-lying']; // standing, running, sliding (lying image)
+/** CSS classes for one penguin meeple of a given design (0 standing, 1 running, 2 sliding). */
+function penguinMeepleClasses(playerColorHex, design) {
+    const name = penguinColorName(playerColorHex);
+    const d = Math.min(2, Math.max(0, design));
+    return `penguin-meeple${d === 2 ? ' penguin-meeple-sliding' : ''} penguin${PENGUIN_DESIGN_SUFFIX[d]}-${name}`;
+}
 /** HTML for `count` penguin meeples in the player's color: one of each
  *  design (standing, running, sliding). When fewer than 3 are available
  *  the sliding one is gone first (it is the diving penguin), then running. */
 function penguinMeeplesHtml(playerColorHex, count) {
-    const name = penguinColorName(playerColorHex);
-    const designs = [
-        { suffix: '', extra: '' }, // standing
-        { suffix: '-running', extra: '' }, // running
-        { suffix: '-lying', extra: ' penguin-meeple-sliding' }, // sliding (lying image)
-    ];
     const n = Math.max(0, Math.min(3, count));
-    return designs.slice(0, n).map(d => `<span class="penguin-meeple${d.extra} penguin${d.suffix}-${name}"></span>`).join('');
+    return Array.from({ length: n }, (_, i) => `<span class="${penguinMeepleClasses(playerColorHex, i)}"></span>`).join('');
 }
 class Game {
     constructor(bga) {
@@ -734,13 +736,20 @@ class Game {
     updateAllTrappedPenguins() {
         // Clear all predator docks
         document.querySelectorAll('.tile-trapped-dock').forEach(el => el.innerHTML = '');
+        // A player's trapped penguins, in the order they left the available
+        // set, are the sliding one first (it did the dive), then running,
+        // then standing — the same order the available display drops them.
+        const trappedIndexByPlayer = new Map();
         for (const tp of this.trappedPenguins) {
             const dock = document.getElementById(`dd-dock-${tp.tileId}`);
             if (dock) {
                 const player = this.gamedatas.players[tp.playerId];
                 const color = player ? player.color : '000000';
+                const idx = trappedIndexByPlayer.get(tp.playerId) ?? 0;
+                trappedIndexByPlayer.set(tp.playerId, idx + 1);
+                const design = Math.max(0, 2 - idx);
                 dock.insertAdjacentHTML('beforeend', `
-                    <span class="penguin-meeple trapped-penguin-meeple penguin-${penguinColorName(color)}" title="${player ? player.name : ''}"></span>
+                    <span class="${penguinMeepleClasses(color, design)} trapped-penguin-meeple" title="${player ? player.name : ''}"></span>
                 `);
             }
         }

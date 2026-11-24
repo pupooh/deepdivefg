@@ -508,6 +508,12 @@ html {
   animation: dd-shake 0.8s infinite ease-in-out;
 }
 
+/* A trapped sliding penguin is wide and short; keep it small enough for the dock. */
+.penguin-meeple.trapped-penguin-meeple.penguin-meeple-sliding {
+  width: 18px;
+  height: 9px;
+}
+
 /* ========================================================
    Interactive Affordances & Animations
    ======================================================== */
