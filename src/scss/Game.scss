@@ -377,9 +377,15 @@ html {
 /* The library draws a 5px dashed orange outline on EVERY selectable card
    (.card-stock .bga-cards_selectable-card { outline: 5px dashed orange }),
    so while diving all of the current depth's tiles look highlighted.
-   Suppress it by default — the highlight appears only on hover (below). */
-.card-stock .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card) {
+   Suppress it by default — the highlight appears only on hover (below).
+   Set outline-style explicitly (not just the outline shorthand) and zero
+   the library's own outline-size variable, so the computed outline-style
+   is none. */
+.bga-cards_selectable-card {
+    --bga-cards_selectable-card_outline-size: 0;
     outline: none !important;
+    outline-style: none !important;
+    outline-width: 0 !important;
 }
 .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover {
     transform: translateY(-4px) scale(1.08);
