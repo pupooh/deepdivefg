@@ -12,11 +12,11 @@ declare(strict_types=1);
 
 namespace Bga\Games\DeepDiveFG;
 
-use Bga\GameFramework\StateType;
+use Bga\GameFramework\Table;
 use Bga\Games\DeepDiveFG\States as S;
 use Bga\Games\DeepDiveFG\OceanTiles as OT;
 
-class Game extends \Bga\GameFramework\Table
+class Game extends Table
 {
     /** Single owner of all `ocean_tile` access (see OT\OceanTileManager). */
     public OT\OceanTileManager $tileManager;
@@ -29,14 +29,25 @@ class Game extends \Bga\GameFramework\Table
 
     public function getGameProgression(): int
     {
-        $facedownRemaining = $this->tileManager->getTotalFacedownCount();
-        // Exact active-tile count recorded at setup (79..145 by player count).
-        $totalInitial = (int) $this->globals->get('totalOceanTiles', 120);
-        if ($totalInitial <= 0) {
-            return 0;
+        // For each depth, the share of its ocean tiles that are face up;
+        // the furthest-advanced depth is the game's progression.
+        $best = 0.0;
+        $anyTiles = false;
+        for ($d = 1; $d <= 5; $d++) {
+            $tiles = $this->tileManager->getOceanTilesAtDepth($d);
+            $total = count($tiles);
+            if ($total <= 0) {
+                continue;
+            }
+            $anyTiles = true;
+            $faceup = count(array_filter($tiles, fn(OT\OceanTile $t) => $t->isFaceup));
+            $best = max($best, ($faceup / $total) * 100);
         }
-        $progression = (int) round((1 - ($facedownRemaining / $totalInitial)) * 100);
-        return min(100, max(0, $progression));
+        // No tiles left in the ocean at any depth: the ocean is fully explored.
+        if (!$anyTiles) {
+            return 100;
+        }
+        return (int) round($best);
     }
 
     public function upgradeTableDb($from_version)
