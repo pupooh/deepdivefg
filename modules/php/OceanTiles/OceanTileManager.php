@@ -201,6 +201,7 @@ class OceanTileManager
     {
         $tile->isFaceup = true;
         $this->items->updateItem($tile, ['isFaceup']);
+        $this->game->updateGameProgressionForDepth($tile->depth);
     }
 
     public function moveTileToBox(OceanTile $tile): void

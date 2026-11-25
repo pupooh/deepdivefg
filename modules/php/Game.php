@@ -29,25 +29,27 @@ class Game extends Table
 
     public function getGameProgression(): int
     {
-        // For each depth, the share of its ocean tiles that are face up;
-        // the furthest-advanced depth is the game's progression.
-        $best = 0.0;
-        $anyTiles = false;
-        for ($d = 1; $d <= 5; $d++) {
-            $tiles = $this->tileManager->getOceanTilesAtDepth($d);
-            $total = count($tiles);
-            if ($total <= 0) {
-                continue;
-            }
-            $anyTiles = true;
-            $faceup = count(array_filter($tiles, fn(OT\OceanTile $t) => $t->isFaceup));
-            $best = max($best, ($faceup / $total) * 100);
+        // Cached by updateGameProgressionForDepth() on every tile flip.
+        return (int) $this->globals->get('gameProgression', 0);
+    }
+
+    /**
+     * After a tile is flipped at a depth, recompute that depth's faceup
+     * share and keep the best share across depths as the progression.
+     */
+    public function updateGameProgressionForDepth(int $depth): void
+    {
+        $tiles = $this->tileManager->getOceanTilesAtDepth($depth);
+        $total = count($tiles);
+        if ($total <= 0) {
+            return;
         }
-        // No tiles left in the ocean at any depth: the ocean is fully explored.
-        if (!$anyTiles) {
-            return 100;
+        $faceup = count(array_filter($tiles, fn(OT\OceanTile $t) => $t->isFaceup));
+        $pct = (int) round(($faceup / $total) * 100);
+        $current = (int) $this->globals->get('gameProgression', 0);
+        if ($pct > $current) {
+            $this->globals->set('gameProgression', $pct);
         }
-        return (int) round($best);
     }
 
     public function upgradeTableDb($from_version)
@@ -97,6 +99,7 @@ class Game extends Table
         $this->globals->set('usedRockThisTurn', false);
         $this->globals->set('gameEndTriggered', false);
         $this->globals->set('gameEndDepth', 0);
+        $this->globals->set('gameProgression', 0);
         $this->globals->set('lastDiveFlipped', false);
         $this->globals->set('isSoloMode', $isSolo);
         $this->globals->set('soloAiDepth', 1);
