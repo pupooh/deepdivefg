@@ -19,6 +19,8 @@ use Bga\Games\DeepDiveFG\States\ConfirmFlipOrDive;
 use Bga\Games\DeepDiveFG\States\RetreatPickTile;
 use Bga\Games\DeepDiveFG\States\NextPlayer;
 use Bga\Games\DeepDiveFG\States\EndScore;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileManager;
 
 class Game extends \Bga\GameFramework\Table
 {

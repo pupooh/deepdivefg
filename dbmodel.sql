@@ -7,7 +7,7 @@
 --
 -- The `ocean_tile` table is NOT declared here: it is created by
 -- ItemManager::initDb() from the OceanTile item class
--- (modules/php/OceanTile.php, via OceanTileManager::initDb() in
+-- (modules/php/OceanTiles/OceanTile.php, via OceanTileManager::initDb() in
 -- setupNewGame). Likewise there is no `trapped_penguin` table any
 -- more — a trapped Penguin lives on its Predator tile
 -- (OceanTile::$trappedPlayerId).

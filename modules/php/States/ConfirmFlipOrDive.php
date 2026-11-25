@@ -9,7 +9,7 @@ use Bga\GameFramework\States\GameState;
 use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
 
 class ConfirmFlipOrDive extends GameState
 {

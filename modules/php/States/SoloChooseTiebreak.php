@@ -10,7 +10,7 @@ use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
 
 class SoloChooseTiebreak extends GameState
 {

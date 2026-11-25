@@ -7,7 +7,7 @@ namespace Bga\Games\DeepDiveFG\States;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
 
 const ST_END_GAME = 99;
 
