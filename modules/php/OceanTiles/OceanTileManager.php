@@ -122,7 +122,7 @@ class OceanTileManager
     {
         return array_values(array_filter(
             $this->getFaceupTilesAtDepth($depth),
-            fn(OceanTile $t) => in_array($t->category, [Game::CATEGORY_FOOD, Game::CATEGORY_ROCK], true),
+            fn(OceanTile $t) => in_array($t->category, [OceanTileCategory::FOOD, OceanTileCategory::ROCK], true),
         ));
     }
 
@@ -180,7 +180,7 @@ class OceanTileManager
     {
         $tiles = array_values(array_filter(
             $this->getPlayerTiles($playerId, OceanTileLocation::TABLEAU),
-            fn(OceanTile $t) => $t->category === Game::CATEGORY_FOOD,
+            fn(OceanTile $t) => $t->category === OceanTileCategory::FOOD,
         ));
         usort($tiles, fn(OceanTile $a, OceanTile $b) => [($a->rowIndex ?? 0), (string) $a->foodColor] <=> [($b->rowIndex ?? 0), (string) $b->foodColor]);
         return $tiles;

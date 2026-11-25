@@ -8,6 +8,8 @@ use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\Games\DeepDiveFG\Game;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileColor;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
 
 class AiTurn extends GameState
@@ -82,19 +84,19 @@ class AiTurn extends GameState
 
         $category = $tile->category;
 
-        if ($category === Game::CATEGORY_PREDATOR) {
+        if ($category === OceanTileCategory::PREDATOR) {
             // AI leaves predator in place and looks for faceup food tiles at targetDepth
             $faceupFood = array_values(array_filter(
                 $this->game->tileManager->getFaceupTilesAtDepth($targetDepth),
-                fn(OceanTile $t) => $t->category === Game::CATEGORY_FOOD,
+                fn(OceanTile $t) => $t->category === OceanTileCategory::FOOD,
             ));
 
             if (!empty($faceupFood)) {
                 // Determine AI color counts
                 $aiFoodCounts = [
-                    Game::COLOR_PINK => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_PINK),
-                    Game::COLOR_GREEN => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_GREEN),
-                    Game::COLOR_YELLOW => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_YELLOW),
+                    OceanTileColor::PINK => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, OceanTileCategory::FOOD, OceanTileColor::PINK),
+                    OceanTileColor::GREEN => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, OceanTileCategory::FOOD, OceanTileColor::GREEN),
+                    OceanTileColor::YELLOW => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, OceanTileCategory::FOOD, OceanTileColor::YELLOW),
                 ];
 
                 // Sort candidates:
@@ -141,12 +143,12 @@ class AiTurn extends GameState
         } else {
             // Food, Rock, or Open Water: AI collects it!
             $loc = match ($category) {
-                Game::CATEGORY_ROCK => OceanTileLocation::ROCK,
-                Game::CATEGORY_FOOD => OceanTileLocation::TABLEAU,
+                OceanTileCategory::ROCK => OceanTileLocation::ROCK,
+                OceanTileCategory::FOOD => OceanTileLocation::TABLEAU,
                 default => OceanTileLocation::TABLEAU,
             };
             $collected = null;
-            if ($category === Game::CATEGORY_FOOD) {
+            if ($category === OceanTileCategory::FOOD) {
                 $collected = $this->game->collectTileForPlayer($tileId, self::AI_PLAYER_ID);
             } else {
                 $this->game->tileManager->moveTileToPlayerLocation($tile, $loc, self::AI_PLAYER_ID);
@@ -174,10 +176,10 @@ class AiTurn extends GameState
     private function getTileDescription(OceanTile $tile): string
     {
         return match ($tile->category) {
-            Game::CATEGORY_OPEN_WATER => clienttranslate('Open Water'),
-            Game::CATEGORY_ROCK => clienttranslate('Rock'),
-            Game::CATEGORY_PREDATOR => clienttranslate('Predator'),
-            Game::CATEGORY_FOOD => sprintf(
+            OceanTileCategory::OPEN_WATER => clienttranslate('Open Water'),
+            OceanTileCategory::ROCK => clienttranslate('Rock'),
+            OceanTileCategory::PREDATOR => clienttranslate('Predator'),
+            OceanTileCategory::FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
                 ucfirst((string) $tile->foodColor),
                 (int) $tile->points

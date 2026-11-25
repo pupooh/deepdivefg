@@ -11,6 +11,7 @@ use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
 
 class PlayerDiveStep extends GameState
@@ -109,7 +110,7 @@ class PlayerDiveStep extends GameState
         // Handle category
         $category = $revealedTile->category;
 
-        if ($category === Game::CATEGORY_OPEN_WATER) {
+        if ($category === OceanTileCategory::OPEN_WATER) {
             $nextDepth = $currentDepth + 1;
             $this->globals->set('currentDepth', $nextDepth);
             $this->notify->all('penguinMovedDepth', clienttranslate('${player_name} dives to Depth ${depth} via Open Water!'), [
@@ -125,7 +126,7 @@ class PlayerDiveStep extends GameState
             } else {
                 return NextPlayer::class;
             }
-        } elseif ($category === Game::CATEGORY_FOOD || $category === Game::CATEGORY_ROCK) {
+        } elseif ($category === OceanTileCategory::FOOD || $category === OceanTileCategory::ROCK) {
             if ($currentDepth === 5) {
                 // Auto-collect at depth 5
                 $collected = $this->game->collectTileForPlayer($tileId, $activePlayerId);
@@ -147,7 +148,7 @@ class PlayerDiveStep extends GameState
                 $this->globals->set('flippedTileId', $tileId);
                 return ConfirmFlipOrDive::class;
             }
-        } elseif ($category === Game::CATEGORY_PREDATOR) {
+        } elseif ($category === OceanTileCategory::PREDATOR) {
             $this->playerStats->inc('predators_hit', 1, $activePlayerId);
             $trappedTotal = $this->game->trapPenguin($activePlayerId, $tileId);
 
@@ -200,7 +201,7 @@ class PlayerDiveStep extends GameState
         if ($tile->location !== OceanTileLocation::OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be taken'));
         }
-        if (!in_array($tile->category, [Game::CATEGORY_FOOD, Game::CATEGORY_ROCK])) {
+        if (!in_array($tile->category, [OceanTileCategory::FOOD, OceanTileCategory::ROCK])) {
             throw new UserException(clienttranslate('Only Food or Rock tiles can be taken'));
         }
 
@@ -296,10 +297,10 @@ class PlayerDiveStep extends GameState
     private function getTileDescription(OceanTile $tile): string
     {
         return match ($tile->category) {
-            Game::CATEGORY_OPEN_WATER => clienttranslate('Open Water'),
-            Game::CATEGORY_ROCK => clienttranslate('Rock'),
-            Game::CATEGORY_PREDATOR => clienttranslate('Predator'),
-            Game::CATEGORY_FOOD => sprintf(
+            OceanTileCategory::OPEN_WATER => clienttranslate('Open Water'),
+            OceanTileCategory::ROCK => clienttranslate('Rock'),
+            OceanTileCategory::PREDATOR => clienttranslate('Predator'),
+            OceanTileCategory::FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
                 ucfirst((string) $tile->foodColor),
                 (int) $tile->points

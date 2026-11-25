@@ -7,6 +7,7 @@ namespace Bga\Games\DeepDiveFG\States;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\Games\DeepDiveFG\Game;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
 
 const ST_END_GAME = 99;
@@ -37,7 +38,7 @@ class EndScore extends GameState
             $aiOpenWaterCount = $this->game->tileManager->countPlayerTiles(
                 AiTurn::AI_PLAYER_ID,
                 OceanTileLocation::TABLEAU,
-                Game::CATEGORY_OPEN_WATER,
+                OceanTileCategory::OPEN_WATER,
             );
 
             $aiTotalScore = 0;

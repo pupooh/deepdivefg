@@ -20,20 +20,13 @@ use Bga\Games\DeepDiveFG\States\RetreatPickTile;
 use Bga\Games\DeepDiveFG\States\NextPlayer;
 use Bga\Games\DeepDiveFG\States\EndScore;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileColor;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTileManager;
 
 class Game extends \Bga\GameFramework\Table
 {
-    public const CATEGORY_OPEN_WATER = 'open_water';
-    public const CATEGORY_ROCK = 'rock';
-    public const CATEGORY_FOOD = 'food';
-    public const CATEGORY_PREDATOR = 'predator';
-
-    public const COLOR_PINK = 'pink';
-    public const COLOR_GREEN = 'green';
-    public const COLOR_YELLOW = 'yellow';
-
     /** Single owner of all `ocean_tile` access (see OceanTileManager). */
     public OceanTileManager $tileManager;
 
@@ -145,34 +138,34 @@ class Game extends \Bga\GameFramework\Table
         // Definition of the 160 tiles
         // Depth 1 (44 tiles: 6 Open Water, 8 Rock, 24 Food [1-2 pts], 6 Predator)
         // 30 Main, 14 Extra
-        $this->addTilesToDefinition($rows, 1, self::CATEGORY_OPEN_WATER, null, 0, main: 4, extra: 2);
-        $this->addTilesToDefinition($rows, 1, self::CATEGORY_ROCK, null, 0, main: 6, extra: 2);
+        $this->addTilesToDefinition($rows, 1, OceanTileCategory::OPEN_WATER, null, 0, main: 4, extra: 2);
+        $this->addTilesToDefinition($rows, 1, OceanTileCategory::ROCK, null, 0, main: 6, extra: 2);
         $this->addFoodTilesToDefinition($rows, 1, [1, 2], mainPerColor: 5, extraPerColor: 3); // 15 main food, 9 extra food = 24
-        $this->addTilesToDefinition($rows, 1, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 1); // 6 predator (total 30 main, 14 extra = 44)
+        $this->addTilesToDefinition($rows, 1, OceanTileCategory::PREDATOR, null, 0, main: 5, extra: 1); // 6 predator (total 30 main, 14 extra = 44)
 
         // Depth 2 (40 tiles: 4 Open Water, 7 Rock, 21 Food [2-4 pts], 8 Predator)
         // 28 Main, 12 Extra
-        $this->addTilesToDefinition($rows, 2, self::CATEGORY_OPEN_WATER, null, 0, main: 3, extra: 1);
-        $this->addTilesToDefinition($rows, 2, self::CATEGORY_ROCK, null, 0, main: 5, extra: 2);
+        $this->addTilesToDefinition($rows, 2, OceanTileCategory::OPEN_WATER, null, 0, main: 3, extra: 1);
+        $this->addTilesToDefinition($rows, 2, OceanTileCategory::ROCK, null, 0, main: 5, extra: 2);
         $this->addFoodTilesToDefinition($rows, 2, [2, 3, 4], mainPerColor: 5, extraPerColor: 2); // 15 main food, 6 extra food = 21
-        $this->addTilesToDefinition($rows, 2, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 28 main, 12 extra = 40)
+        $this->addTilesToDefinition($rows, 2, OceanTileCategory::PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 28 main, 12 extra = 40)
 
         // Depth 3 (30 tiles: 7 Open Water, 0 Rock, 15 Food [3-5 pts], 8 Predator)
         // 22 Main, 8 Extra
-        $this->addTilesToDefinition($rows, 3, self::CATEGORY_OPEN_WATER, null, 0, main: 5, extra: 2);
+        $this->addTilesToDefinition($rows, 3, OceanTileCategory::OPEN_WATER, null, 0, main: 5, extra: 2);
         $this->addFoodTilesToDefinition($rows, 3, [3, 4, 5], mainPerColor: 4, extraPerColor: 1); // 12 main food, 3 extra food = 15
-        $this->addTilesToDefinition($rows, 3, self::CATEGORY_PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 22 main, 8 extra = 30)
+        $this->addTilesToDefinition($rows, 3, OceanTileCategory::PREDATOR, null, 0, main: 5, extra: 3); // 8 predator (total 22 main, 8 extra = 30)
 
         // Depth 4 (23 tiles: 3 Open Water, 0 Rock, 12 Food [5-7 pts], 8 Predator)
         // 17 Main, 6 Extra
-        $this->addTilesToDefinition($rows, 4, self::CATEGORY_OPEN_WATER, null, 0, main: 2, extra: 1);
+        $this->addTilesToDefinition($rows, 4, OceanTileCategory::OPEN_WATER, null, 0, main: 2, extra: 1);
         $this->addFoodTilesToDefinition($rows, 4, [5, 6, 7], mainPerColor: 3, extraPerColor: 1); // 9 main food, 3 extra food = 12
-        $this->addTilesToDefinition($rows, 4, self::CATEGORY_PREDATOR, null, 0, main: 6, extra: 2); // 8 predator (total 17 main, 6 extra = 23)
+        $this->addTilesToDefinition($rows, 4, OceanTileCategory::PREDATOR, null, 0, main: 6, extra: 2); // 8 predator (total 17 main, 6 extra = 23)
 
         // Depth 5 (23 tiles: 0 Open Water, 0 Rock, 12 Food [8-10 pts], 11 Predator)
         // 17 Main, 6 Extra
         $this->addFoodTilesToDefinition($rows, 5, [8, 9, 10], mainPerColor: 3, extraPerColor: 1); // 9 main food, 3 extra food = 12
-        $this->addTilesToDefinition($rows, 5, self::CATEGORY_PREDATOR, null, 0, main: 8, extra: 3); // 11 predator (total 17 main, 6 extra = 23)
+        $this->addTilesToDefinition($rows, 5, OceanTileCategory::PREDATOR, null, 0, main: 8, extra: 3); // 11 predator (total 17 main, 6 extra = 23)
 
         $this->tileManager->createTiles($rows);
 
@@ -224,15 +217,15 @@ class Game extends \Bga\GameFramework\Table
 
     private function addFoodTilesToDefinition(array &$rows, int $depth, array $possiblePoints, int $mainPerColor, int $extraPerColor): void
     {
-        $colors = [self::COLOR_PINK, self::COLOR_GREEN, self::COLOR_YELLOW];
+        $colors = [OceanTileColor::PINK, OceanTileColor::GREEN, OceanTileColor::YELLOW];
         foreach ($colors as $color) {
             for ($i = 0; $i < $mainPerColor; $i++) {
                 $pt = $possiblePoints[$i % count($possiblePoints)];
-                $rows[] = $this->tileRow($depth, self::CATEGORY_FOOD, $color, $pt, false);
+                $rows[] = $this->tileRow($depth, OceanTileCategory::FOOD, $color, $pt, false);
             }
             for ($i = 0; $i < $extraPerColor; $i++) {
                 $pt = $possiblePoints[($mainPerColor + $i) % count($possiblePoints)];
-                $rows[] = $this->tileRow($depth, self::CATEGORY_FOOD, $color, $pt, true);
+                $rows[] = $this->tileRow($depth, OceanTileCategory::FOOD, $color, $pt, true);
             }
         }
     }
@@ -326,15 +319,15 @@ class Game extends \Bga\GameFramework\Table
             throw new \BgaVisibleSystemException("Tile not found: {$tileId}");
         }
 
-        if ($tile->category === self::CATEGORY_ROCK) {
+        if ($tile->category === OceanTileCategory::ROCK) {
             $tile->isFaceup = true;
             $this->tileManager->moveTileToPlayerLocation($tile, OceanTileLocation::ROCK, $playerId);
             $this->tileManager->items->updateItem($tile, ['isFaceup']);
             $this->playerStats->inc('rocks_collected', 1, $playerId);
-        } elseif ($tile->category === self::CATEGORY_FOOD) {
+        } elseif ($tile->category === OceanTileCategory::FOOD) {
             // Determine next rowIndex for this food color
             $foodColor = $tile->foodColor;
-            $existingCount = $this->tileManager->countPlayerTiles($playerId, OceanTileLocation::TABLEAU, self::CATEGORY_FOOD, $foodColor);
+            $existingCount = $this->tileManager->countPlayerTiles($playerId, OceanTileLocation::TABLEAU, OceanTileCategory::FOOD, $foodColor);
             $tile->rowIndex = $existingCount + 1;
             $tile->isFaceup = true;
             $this->tileManager->moveTileToPlayerLocation($tile, OceanTileLocation::TABLEAU, $playerId);

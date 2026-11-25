@@ -11,6 +11,7 @@ use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
 
 class RetreatPickTile extends GameState
 {
@@ -97,8 +98,8 @@ class RetreatPickTile extends GameState
     private function getTileDescription(OceanTile $tile): string
     {
         return match ($tile->category) {
-            Game::CATEGORY_ROCK => clienttranslate('Rock'),
-            Game::CATEGORY_FOOD => sprintf(
+            OceanTileCategory::ROCK => clienttranslate('Rock'),
+            OceanTileCategory::FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
                 ucfirst((string) $tile->foodColor),
                 (int) $tile->points
