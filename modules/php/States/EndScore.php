@@ -33,10 +33,10 @@ class EndScore extends GameState
         if ($isSoloMode) {
             $difficulty = (int) $this->globals->get('soloDifficulty', 1);
             $aiScoreData = $this->game->computePlayerScore(AiTurn::AI_PLAYER_ID);
-            $aiRockCount = $this->game->tileManager->countPlayerTiles(AiTurn::AI_PLAYER_ID, OceanTileLocation::LOCATION_ROCK);
+            $aiRockCount = $this->game->tileManager->countPlayerTiles(AiTurn::AI_PLAYER_ID, OceanTileLocation::ROCK);
             $aiOpenWaterCount = $this->game->tileManager->countPlayerTiles(
                 AiTurn::AI_PLAYER_ID,
-                OceanTileLocation::LOCATION_TABLEAU,
+                OceanTileLocation::TABLEAU,
                 Game::CATEGORY_OPEN_WATER,
             );
 

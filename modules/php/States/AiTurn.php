@@ -92,9 +92,9 @@ class AiTurn extends GameState
             if (!empty($faceupFood)) {
                 // Determine AI color counts
                 $aiFoodCounts = [
-                    Game::COLOR_PINK => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::LOCATION_TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_PINK),
-                    Game::COLOR_GREEN => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::LOCATION_TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_GREEN),
-                    Game::COLOR_YELLOW => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::LOCATION_TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_YELLOW),
+                    Game::COLOR_PINK => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_PINK),
+                    Game::COLOR_GREEN => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_GREEN),
+                    Game::COLOR_YELLOW => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, Game::CATEGORY_FOOD, Game::COLOR_YELLOW),
                 ];
 
                 // Sort candidates:
@@ -141,9 +141,9 @@ class AiTurn extends GameState
         } else {
             // Food, Rock, or Open Water: AI collects it!
             $loc = match ($category) {
-                Game::CATEGORY_ROCK => OceanTileLocation::LOCATION_ROCK,
-                Game::CATEGORY_FOOD => OceanTileLocation::LOCATION_TABLEAU,
-                default => OceanTileLocation::LOCATION_TABLEAU,
+                Game::CATEGORY_ROCK => OceanTileLocation::ROCK,
+                Game::CATEGORY_FOOD => OceanTileLocation::TABLEAU,
+                default => OceanTileLocation::TABLEAU,
             };
             $collected = null;
             if ($category === Game::CATEGORY_FOOD) {

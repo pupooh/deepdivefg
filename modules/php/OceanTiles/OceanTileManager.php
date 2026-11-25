@@ -32,10 +32,10 @@ class OceanTileManager
         $this->items = $game->bga->itemManagerFactory->createItemManager(
             OceanTile::class,
             locations: [
-                new ItemLocation(OceanTileLocation::LOCATION_OCEAN),
-                new ItemLocation(OceanTileLocation::LOCATION_BOX),
-                new ItemLocation(OceanTileLocation::LOCATION_TABLEAU),
-                new ItemLocation(OceanTileLocation::LOCATION_ROCK),
+                new ItemLocation(OceanTileLocation::OCEAN),
+                new ItemLocation(OceanTileLocation::BOX),
+                new ItemLocation(OceanTileLocation::TABLEAU),
+                new ItemLocation(OceanTileLocation::ROCK),
             ],
         );
     }
@@ -54,7 +54,7 @@ class OceanTileManager
 
     public function shuffleDepth(int $depth): void
     {
-        $this->items->shuffle([OceanTileLocation::LOCATION_OCEAN, $depth]);
+        $this->items->shuffle([OceanTileLocation::OCEAN, $depth]);
     }
 
     public function getTile(int $tileId): ?OceanTile
@@ -76,7 +76,7 @@ class OceanTileManager
     /** @return OceanTile[] */
     public function getOceanTilesAtDepth(int $depth): array
     {
-        return $this->items->getItemsInLocation([OceanTileLocation::LOCATION_OCEAN, $depth])->values();
+        return $this->items->getItemsInLocation([OceanTileLocation::OCEAN, $depth])->values();
     }
 
     /** @return OceanTile[] */
@@ -104,7 +104,7 @@ class OceanTileManager
 
     public function countOceanTilesAtDepth(int $depth): int
     {
-        return $this->items->countItemsInLocation([OceanTileLocation::LOCATION_OCEAN, $depth]);
+        return $this->items->countItemsInLocation([OceanTileLocation::OCEAN, $depth]);
     }
 
     /** @return OceanTile[] */
@@ -153,12 +153,12 @@ class OceanTileManager
 
     public function getPlayerRockCount(int $playerId): int
     {
-        return $this->items->countItemsInLocation([OceanTileLocation::LOCATION_ROCK, $playerId]);
+        return $this->items->countItemsInLocation([OceanTileLocation::ROCK, $playerId]);
     }
 
     public function getPlayerRockTile(int $playerId): ?OceanTile
     {
-        return $this->items->getItemsInLocation([OceanTileLocation::LOCATION_ROCK, $playerId])->first();
+        return $this->items->getItemsInLocation([OceanTileLocation::ROCK, $playerId])->first();
     }
 
     /**
@@ -179,7 +179,7 @@ class OceanTileManager
     public function getPlayerFoodTiles(int $playerId): array
     {
         $tiles = array_values(array_filter(
-            $this->getPlayerTiles($playerId, OceanTileLocation::LOCATION_TABLEAU),
+            $this->getPlayerTiles($playerId, OceanTileLocation::TABLEAU),
             fn(OceanTile $t) => $t->category === Game::CATEGORY_FOOD,
         ));
         usort($tiles, fn(OceanTile $a, OceanTile $b) => [($a->rowIndex ?? 0), (string) $a->foodColor] <=> [($b->rowIndex ?? 0), (string) $b->foodColor]);
@@ -206,7 +206,7 @@ class OceanTileManager
     public function moveTileToBox(OceanTile $tile): void
     {
         $tile->trappedPlayerId = null;
-        $this->items->moveItem($tile, OceanTileLocation::LOCATION_BOX);
+        $this->items->moveItem($tile, OceanTileLocation::BOX);
         $this->items->updateItem($tile, ['trappedPlayerId']);
     }
 

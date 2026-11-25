@@ -76,7 +76,7 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile->location !== OceanTileLocation::LOCATION_OCEAN || $tile->depth !== $currentDepth || $tile->isFaceup) {
+        if ($tile->location !== OceanTileLocation::OCEAN || $tile->depth !== $currentDepth || $tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be flipped at the current depth'));
         }
 
@@ -197,7 +197,7 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile->location !== OceanTileLocation::LOCATION_OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
+        if ($tile->location !== OceanTileLocation::OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be taken'));
         }
         if (!in_array($tile->category, [Game::CATEGORY_FOOD, Game::CATEGORY_ROCK])) {

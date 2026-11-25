@@ -183,7 +183,7 @@ class Game extends \Bga\GameFramework\Table
                 $this->tileManager->items->getAllItems()->values(),
                 fn(OceanTile $t) => $t->isExtra,
             ));
-            $this->tileManager->items->moveItems($extraTiles, OceanTileLocation::LOCATION_BOX);
+            $this->tileManager->items->moveItems($extraTiles, OceanTileLocation::BOX);
         }
 
         // Remove random tiles per depth based on player count.
@@ -204,7 +204,7 @@ class Game extends \Bga\GameFramework\Table
             $tilesAtDepth = $this->tileManager->getOceanTilesAtDepth($d);
             $toRemove = array_slice($tilesAtDepth, 0, $removalCount);
             if (!empty($toRemove)) {
-                $this->tileManager->items->moveItems($toRemove, OceanTileLocation::LOCATION_BOX);
+                $this->tileManager->items->moveItems($toRemove, OceanTileLocation::BOX);
             }
             $totalOceanTiles += $this->tileManager->countOceanTilesAtDepth($d);
         }
@@ -241,7 +241,7 @@ class Game extends \Bga\GameFramework\Table
     private function tileRow(int $depth, string $category, ?string $foodColor, int $points, bool $isExtra): array
     {
         return [
-            'location' => OceanTileLocation::LOCATION_OCEAN,
+            'location' => OceanTileLocation::OCEAN,
             'locationArg' => $depth,
             'depth' => $depth,
             'category' => $category,
@@ -328,16 +328,16 @@ class Game extends \Bga\GameFramework\Table
 
         if ($tile->category === self::CATEGORY_ROCK) {
             $tile->isFaceup = true;
-            $this->tileManager->moveTileToPlayerLocation($tile, OceanTileLocation::LOCATION_ROCK, $playerId);
+            $this->tileManager->moveTileToPlayerLocation($tile, OceanTileLocation::ROCK, $playerId);
             $this->tileManager->items->updateItem($tile, ['isFaceup']);
             $this->playerStats->inc('rocks_collected', 1, $playerId);
         } elseif ($tile->category === self::CATEGORY_FOOD) {
             // Determine next rowIndex for this food color
             $foodColor = $tile->foodColor;
-            $existingCount = $this->tileManager->countPlayerTiles($playerId, OceanTileLocation::LOCATION_TABLEAU, self::CATEGORY_FOOD, $foodColor);
+            $existingCount = $this->tileManager->countPlayerTiles($playerId, OceanTileLocation::TABLEAU, self::CATEGORY_FOOD, $foodColor);
             $tile->rowIndex = $existingCount + 1;
             $tile->isFaceup = true;
-            $this->tileManager->moveTileToPlayerLocation($tile, OceanTileLocation::LOCATION_TABLEAU, $playerId);
+            $this->tileManager->moveTileToPlayerLocation($tile, OceanTileLocation::TABLEAU, $playerId);
             $this->tileManager->items->updateItem($tile, ['rowIndex', 'isFaceup']);
             $this->updatePlayerScores();
         }

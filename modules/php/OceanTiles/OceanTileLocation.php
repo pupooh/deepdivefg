@@ -20,8 +20,8 @@ namespace Bga\Games\DeepDiveFG\OceanTiles;
 
 final class OceanTileLocation
 {
-    public const LOCATION_OCEAN = 'ocean';
-    public const LOCATION_BOX = 'box';
-    public const LOCATION_TABLEAU = 'tableau';
-    public const LOCATION_ROCK = 'rock';
+    public const OCEAN = 'ocean';
+    public const BOX = 'box';
+    public const TABLEAU = 'tableau';
+    public const ROCK = 'rock';
 }
