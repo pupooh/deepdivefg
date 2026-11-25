@@ -49,21 +49,16 @@ export class OceanTileManager extends BgaCards.Manager<OceanTile> {
 /** Face classes for a tile's front side (food colour / rock / open water / predator). */
 function tileFaceClasses(tile: OceanTile): string {
     const cat = tile.category || 'open_water';
-    let classes = `tile-faceup tile-${cat}`;
-    if (cat === 'food') {
-        classes += ` food-${tile.foodColor || 'pink'}`;
-    }
-    return classes;
+    // Front background is driven by depth (depth-front-N), not by category
+    // or food color; the food color shows on the animal itself instead.
+    return `tile-faceup tile-${cat} depth-front-${tile.depth}`;
 }
 
 /** Inner HTML of a facedown tile's back side. */
 function renderTileBackInnerHtml(tile: OceanTile): string {
-    return `
-        <div class="tile-back-inner">
-            <span class="tile-depth-num">${tile.depth}</span>
-            <span class="tile-wave-pattern">〰️</span>
-        </div>
-    `;
+    // The wave texture is the back's background image (see Game.scss
+    // .tile-facedown::before); no inner content needed.
+    return `<div class="tile-back-inner"></div>`;
 }
 
 /** Inner HTML of a faceup tile's front side. */
@@ -73,28 +68,37 @@ function renderTileFrontInnerHtml(tile: OceanTile): string {
 
     if (cat === 'food') {
         const color = tile.foodColor || 'pink';
-        const foodIcons: Record<string, string> = { pink: '🦐', green: '🐟', yellow: '🦑' };
-        const icon = foodIcons[color] || '🐟';
+        // Animal by depth, in its food color: rulebook art
+        // (img/animal-{species}-{color}.webp).
+        const speciesByDepth: Record<number, string> = {
+            1: 'shrimp',
+            2: 'crab',
+            3: 'school',
+            4: 'fish',
+            5: 'squid',
+        };
+        const species = speciesByDepth[tile.depth] || 'fish';
         innerHtml = `
-            <div class="tile-food-icon">${icon}</div>
+            <div class="tile-animal-img animal-${species}-${color}"></div>
             <div class="tile-points-badge">${tile.points}</div>
-            <div class="tile-color-tag">${color.toUpperCase()}</div>
         `;
     } else if (cat === 'rock') {
         innerHtml = `
-            <div class="tile-icon">🪨</div>
-            <div class="tile-label">${_('ROCK')}</div>
+            <div class="tile-animal-img tile-rock-img"></div>
         `;
     } else if (cat === 'open_water') {
         innerHtml = `
-            <div class="tile-icon">🌊</div>
-            <div class="tile-label">${_('OPEN WATER')}</div>
-            <div class="tile-sublabel">${_('Dive Deeper')}</div>
+            <div class="tile-animal-img tile-bubbles-img"></div>
         `;
     } else if (cat === 'predator') {
+        // Predator animal by depth, rulebook art (img/predator-{animal}-d{N}.webp):
+        // seal D1-D2, killer whale D3-D4, shark D5.
+        const predatorImg = tile.depth === 5 ? 'predator-shark'
+            : tile.depth <= 2 ? `predator-seal-d${tile.depth}`
+            : `predator-orca-d${tile.depth}`;
         innerHtml = `
-            <div class="tile-icon">🦈</div>
-            <div class="tile-label">${_('PREDATOR')}</div>
+            <div class="tile-animal-img ${predatorImg}"></div>
+            <span class="tile-predator-warning" title="${_('Predator')}">⚠️</span>
             <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
         `;
     }

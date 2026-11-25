@@ -118,6 +118,7 @@ class OceanTile
             'category' => $this->category,
             'foodColor' => $this->foodColor,
             'points' => $this->points,
+            'isFaceup' => $this->isFaceup,
             'rowIndex' => $this->rowIndex,
         ];
     }

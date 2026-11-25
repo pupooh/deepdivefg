@@ -3,10 +3,19 @@
  * Deep Dive - BGA Stylesheet
  * High-fidelity pure CSS/SVG visual identity
  */
+:root {
+  --game-bga-main-background: linear-gradient(to bottom, #7DD3F6 0%, #6CC0EE 100%);
+}
+
+html {
+  background: linear-gradient(to bottom, #7DD3F6 0%, #6CC0EE 100%);
+}
+
 #dd-container {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 10px;
   font-family: "Roboto", "Segoe UI", Arial, sans-serif;
   color: #2b2d42;
   box-sizing: border-box;
@@ -16,90 +25,22 @@
 }
 
 /* ========================================================
-   Header & Status Banner
-   ======================================================== */
-#dd-header-banner {
-  display: flex;
-  align-items: center;
-  background: linear-gradient(135deg, #0b2545 0%, #134074 100%);
-  color: #ffffff;
-  border-radius: 10px;
-  padding: 10px 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-#dd-token-container {
-  margin-right: 16px;
-  perspective: 600px;
-}
-
-#dd-start-token {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  position: relative;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
-  transform-style: preserve-3d;
-  cursor: default;
-}
-#dd-start-token.first-player {
-  background: radial-gradient(circle at 35% 35%, #90e0ef 0%, #0077b6 100%);
-  border: 3px solid #caf0f8;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-}
-#dd-start-token.first-player .token-back {
-  display: none;
-}
-#dd-start-token.first-player .token-front {
-  display: block;
-  font-size: 18px;
-}
-#dd-start-token.last-dive {
-  background: radial-gradient(circle at 35% 35%, #ff4d6d 0%, #800f2f 100%);
-  border: 3px solid #ffccd5;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-#dd-start-token.last-dive .token-front {
-  display: none;
-}
-#dd-start-token.last-dive .token-back {
-  display: block;
-  font-size: 10px;
-  line-height: 1.1;
-  letter-spacing: 0.5px;
-}
-
-#dd-status-text {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* ========================================================
-   Main Layout: Ocean Board & Player Area
+   Main Layout: Player Area (left) & Ocean Board (right)
    ======================================================== */
 #dd-main-layout {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 16px;
 }
 
 /* ========================================================
-   Ocean Board: 5 Depth Rows (Horizontal Lanes)
+   Ocean Board: 5 Depth Rows
    ======================================================== */
 #dd-ocean-board {
+  flex: 1 1 auto;
+  max-width: 800px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -124,11 +65,6 @@
 .dd-depth-row.depth-1 .dd-depth-title {
   color: #03045e;
 }
-.dd-depth-row.depth-1 .dd-depth-count-badge {
-  background: rgba(0, 150, 199, 0.15);
-  color: #03045e;
-  border-color: #0096c7;
-}
 .dd-depth-row.depth-2 {
   background: linear-gradient(135deg, #c3ebf7 0%, #90e0ef 100%);
   border-color: #48cae4;
@@ -139,11 +75,6 @@
 }
 .dd-depth-row.depth-2 .dd-depth-title {
   color: #023e8a;
-}
-.dd-depth-row.depth-2 .dd-depth-count-badge {
-  background: rgba(0, 119, 182, 0.15);
-  color: #023e8a;
-  border-color: #0077b6;
 }
 .dd-depth-row.depth-3 {
   background: linear-gradient(135deg, #48cae4 0%, #0077b6 100%);
@@ -158,11 +89,6 @@
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
-.dd-depth-row.depth-3 .dd-depth-count-badge {
-  background: rgba(3, 4, 94, 0.35);
-  color: #caf0f8;
-  border-color: #caf0f8;
-}
 .dd-depth-row.depth-4 {
   background: linear-gradient(135deg, #0077b6 0%, #03045e 100%);
   border-color: #03045e;
@@ -175,11 +101,6 @@
 .dd-depth-row.depth-4 .dd-depth-title {
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-.dd-depth-row.depth-4 .dd-depth-count-badge {
-  background: rgba(11, 9, 43, 0.5);
-  color: #90e0ef;
-  border-color: #90e0ef;
 }
 .dd-depth-row.depth-5 {
   background: linear-gradient(135deg, #03045e 0%, #0b092b 100%);
@@ -194,11 +115,6 @@
 .dd-depth-row.depth-5 .dd-depth-title {
   color: #caf0f8;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-}
-.dd-depth-row.depth-5 .dd-depth-count-badge {
-  background: rgba(26, 22, 75, 0.7);
-  color: #ffccd5;
-  border-color: #ff4d6d;
 }
 .dd-depth-row.active-depth {
   border-color: #00f0ff !important;
@@ -242,15 +158,6 @@
   letter-spacing: 0.3px;
 }
 
-.dd-depth-count-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
-  border: 1px solid currentColor;
-  letter-spacing: 0.3px;
-}
-
 .dd-depth-penguins {
   display: flex;
   gap: 6px;
@@ -258,9 +165,30 @@
 }
 
 .dd-diving-penguin {
-  font-size: 22px;
+  display: inline-block;
+  width: 34px;
+  height: 18px;
+  /* Lying-penguin sprite sheet (img/sprite-penguin-lying.webp, 6x1 grid
+     of 68px cells; each cell shows at 34px, so the sheet displays at
+     204px x 18px). The column comes from --penguin-lying-col, set by
+     the .penguin-lying-{color} class on the same element. */
+  background-size: 204px 18px;
+  background-repeat: no-repeat;
+  background-position: calc(var(--penguin-lying-col, 0) * -34px) 0;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
   animation: dd-waddle 1.4s infinite ease-in-out;
+}
+
+/* Diving penguin moved onto a selected tile: centered on the bottom edge.
+   Centered with left/right + auto margins (no transform — dd-waddle owns
+   the transform, so a translateX here would be overwritten by the animation). */
+.dd-diving-penguin.dd-on-tile {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  z-index: 5;
 }
 
 .dd-depth-exhausted-badge {
@@ -277,34 +205,20 @@
 }
 
 /* ========================================================
-   Horizontal Ocean Tiles Lane (Per Depth)
+   Ocean Tiles Lane (Per Depth)
    ======================================================== */
 .dd-depth-tiles-lane {
   display: flex;
   flex-direction: row;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 6px 4px 10px 4px;
-  overflow-x: auto;
-  overflow-y: hidden;
   min-height: 84px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
-}
-.dd-depth-tiles-lane::-webkit-scrollbar {
-  height: 6px;
-}
-.dd-depth-tiles-lane::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.45);
-  border-radius: 3px;
-}
-.dd-depth-tiles-lane::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 /* ========================================================
-   Ocean Tiles (68px x 68px, Fixed in Horizontal Row)
+   Ocean Tiles (68px x 68px)
    ======================================================== */
 .dd-tile {
   flex: 0 0 68px;
@@ -324,24 +238,34 @@
   transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
 }
 .dd-tile .bga-cards_card-side.tile-facedown {
-  background: linear-gradient(135deg, #134074 0%, #0b2545 100%);
+  background-color: #0b2545;
   border-color: #caf0f8;
   color: #caf0f8;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-1 {
-  background: linear-gradient(135deg, #0096c7 0%, #0077b6 100%);
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -0px 0;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-2 {
-  background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -68px 0;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-3 {
-  background: linear-gradient(135deg, #023e8a 0%, #03045e 100%);
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -136px 0;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-4 {
-  background: linear-gradient(135deg, #03045e 0%, #081c3b 100%);
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -204px 0;
 }
 .dd-tile .bga-cards_card-side.tile-facedown.depth-back-5 {
-  background: linear-gradient(135deg, #0b092b 0%, #020112 100%);
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -272px 0;
 }
 .dd-tile .bga-cards_card-side.tile-facedown .tile-back-inner {
   display: flex;
@@ -349,34 +273,45 @@
   align-items: center;
   justify-content: center;
 }
-.dd-tile .bga-cards_card-side.tile-facedown .tile-depth-num {
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+.dd-tile .bga-cards_card-side.depth-front-1 {
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: 0 -68px;
+  background-color: #0096c7;
+  border-color: #90e0ef;
+  color: #ffffff;
 }
-.dd-tile .bga-cards_card-side.tile-facedown .tile-wave-pattern {
-  font-size: 13px;
-  opacity: 0.8;
+.dd-tile .bga-cards_card-side.depth-front-2 {
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -68px -68px;
+  background-color: #0077b6;
+  border-color: #48cae4;
+  color: #ffffff;
 }
-.dd-tile .bga-cards_card-side.tile-food.food-pink {
-  background: linear-gradient(135deg, #ffccd5 0%, #ff758f 100%);
-  border-color: #c9184a;
-  color: #590d22;
+.dd-tile .bga-cards_card-side.depth-front-3 {
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -136px -68px;
+  background-color: #023e8a;
+  border-color: #48cae4;
+  color: #ffffff;
 }
-.dd-tile .bga-cards_card-side.tile-food.food-green {
-  background: linear-gradient(135deg, #d8f3dc 0%, #74c69d 100%);
-  border-color: #2d6a4f;
-  color: #081c15;
+.dd-tile .bga-cards_card-side.depth-front-4 {
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -204px -68px;
+  background-color: #03045e;
+  border-color: #03045e;
+  color: #ffffff;
 }
-.dd-tile .bga-cards_card-side.tile-food.food-yellow {
-  background: linear-gradient(135deg, #fff3b0 0%, #ffd166 100%);
-  border-color: #e09f3e;
-  color: #54390b;
-}
-.dd-tile .bga-cards_card-side.tile-food .tile-food-icon {
-  font-size: 24px;
-  line-height: 1;
+.dd-tile .bga-cards_card-side.depth-front-5 {
+  background-image: url("img/sprite-tile-bg.webp");
+  background-size: 340px 136px;
+  background-position: -272px -68px;
+  background-color: #0b092b;
+  border-color: #1a164b;
+  color: #ffffff;
 }
 .dd-tile .bga-cards_card-side.tile-food .tile-points-badge {
   position: absolute;
@@ -390,58 +325,133 @@
   color: #000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
-.dd-tile .bga-cards_card-side.tile-food .tile-color-tag {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  opacity: 0.85;
-  margin-top: 2px;
+.dd-tile .bga-cards_card-side .tile-animal-img {
+  width: 46px;
+  height: 46px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  flex: 0 0 auto;
 }
-.dd-tile .bga-cards_card-side.tile-rock {
-  background: linear-gradient(135deg, #ced4da 0%, #6c757d 100%);
-  border-color: #495057;
-  color: #212529;
+.dd-tile .bga-cards_card-side .animal-shrimp-pink {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -0px -0px;
 }
-.dd-tile .bga-cards_card-side.tile-rock .tile-icon {
-  font-size: 26px;
+.dd-tile .bga-cards_card-side .animal-shrimp-green {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -46px -0px;
 }
-.dd-tile .bga-cards_card-side.tile-rock .tile-label {
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
+.dd-tile .bga-cards_card-side .animal-shrimp-yellow {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -92px -0px;
 }
-.dd-tile .bga-cards_card-side.tile-open_water {
-  background: linear-gradient(135deg, #90e0ef 0%, #0096c7 100%);
-  border-color: #0077b6;
-  color: #ffffff;
+.dd-tile .bga-cards_card-side .animal-crab-pink {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -138px -0px;
 }
-.dd-tile .bga-cards_card-side.tile-open_water .tile-icon {
-  font-size: 24px;
+.dd-tile .bga-cards_card-side .animal-crab-green {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -184px -0px;
 }
-.dd-tile .bga-cards_card-side.tile-open_water .tile-label {
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  line-height: 1.1;
+.dd-tile .bga-cards_card-side .animal-crab-yellow {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -0px -46px;
 }
-.dd-tile .bga-cards_card-side.tile-open_water .tile-sublabel {
-  font-size: 8px;
-  font-weight: 700;
-  opacity: 0.9;
+.dd-tile .bga-cards_card-side .animal-school-pink {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -46px -46px;
 }
-.dd-tile .bga-cards_card-side.tile-predator {
-  background: linear-gradient(135deg, #e63946 0%, #6a040f 100%);
-  border-color: #370617;
-  color: #ffffff;
+.dd-tile .bga-cards_card-side .animal-school-green {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -92px -46px;
+}
+.dd-tile .bga-cards_card-side .animal-school-yellow {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -138px -46px;
+}
+.dd-tile .bga-cards_card-side .animal-fish-pink {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -184px -46px;
+}
+.dd-tile .bga-cards_card-side .animal-fish-green {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -0px -92px;
+}
+.dd-tile .bga-cards_card-side .animal-fish-yellow {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -46px -92px;
+}
+.dd-tile .bga-cards_card-side .animal-squid-pink {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -92px -92px;
+}
+.dd-tile .bga-cards_card-side .animal-squid-green {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -138px -92px;
+}
+.dd-tile .bga-cards_card-side .animal-squid-yellow {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -184px -92px;
+}
+.dd-tile .bga-cards_card-side .tile-rock-img {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -0px -138px;
+}
+.dd-tile .bga-cards_card-side .tile-bubbles-img {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -46px -138px;
+}
+.dd-tile .bga-cards_card-side .predator-shark {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -92px -138px;
+}
+.dd-tile .bga-cards_card-side .predator-seal-d1 {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -138px -138px;
+}
+.dd-tile .bga-cards_card-side .predator-seal-d2 {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -184px -138px;
+}
+.dd-tile .bga-cards_card-side .predator-orca-d3 {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -0px -184px;
+}
+.dd-tile .bga-cards_card-side .predator-orca-d4 {
+  background-image: url("img/sprite-tile-art.webp");
+  background-size: 230px 230px;
+  background-position: -46px -184px;
 }
 .dd-tile .bga-cards_card-side.tile-predator .tile-icon {
   font-size: 24px;
 }
-.dd-tile .bga-cards_card-side.tile-predator .tile-label {
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+.dd-tile .bga-cards_card-side.tile-predator .tile-predator-warning {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 13px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
 }
 .dd-tile .bga-cards_card-side.tile-predator .tile-trapped-dock {
   display: flex;
@@ -459,10 +469,149 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
+.penguin-meeple {
+  display: inline-block;
+  width: 18px;
+  height: 25px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  vertical-align: middle;
+}
+
+/* The sliding penguin is wide and short, so it gets a wider, shorter box.
+   Lying-penguin sprite at 25x13: the sheet (408x36) displays at 147.33px
+   x 13px, so each 68px cell shows at 24.56px wide. */
+.penguin-meeple.penguin-meeple-sliding {
+  width: 25px;
+  height: 13px;
+  background-size: 147.33px 13px;
+  background-position: calc(var(--penguin-lying-col, 0) * -24.56px) 0;
+}
+
+.penguin-magenta {
+  background-image: url("img/sprite-penguin-standing.webp");
+  background-size: 108px 25px;
+  background-position: -0px 0;
+}
+
+.penguin-green {
+  background-image: url("img/sprite-penguin-standing.webp");
+  background-size: 108px 25px;
+  background-position: -18px 0;
+}
+
+.penguin-blue {
+  background-image: url("img/sprite-penguin-standing.webp");
+  background-size: 108px 25px;
+  background-position: -36px 0;
+}
+
+.penguin-yellow {
+  background-image: url("img/sprite-penguin-standing.webp");
+  background-size: 108px 25px;
+  background-position: -54px 0;
+}
+
+.penguin-purple {
+  background-image: url("img/sprite-penguin-standing.webp");
+  background-size: 108px 25px;
+  background-position: -72px 0;
+}
+
+.penguin-orange {
+  background-image: url("img/sprite-penguin-standing.webp");
+  background-size: 108px 25px;
+  background-position: -90px 0;
+}
+
+/* Running penguin: one image per player color (sprite sheet, 6x1 grid of
+   36px cells; each cell shows at 18px, so the sheet displays at 108px). */
+.penguin-running-magenta {
+  background-image: url("img/sprite-penguin-running.webp");
+  background-size: 108px 25px;
+  background-position: -0px 0;
+}
+
+.penguin-running-green {
+  background-image: url("img/sprite-penguin-running.webp");
+  background-size: 108px 25px;
+  background-position: -18px 0;
+}
+
+.penguin-running-blue {
+  background-image: url("img/sprite-penguin-running.webp");
+  background-size: 108px 25px;
+  background-position: -36px 0;
+}
+
+.penguin-running-yellow {
+  background-image: url("img/sprite-penguin-running.webp");
+  background-size: 108px 25px;
+  background-position: -54px 0;
+}
+
+.penguin-running-purple {
+  background-image: url("img/sprite-penguin-running.webp");
+  background-size: 108px 25px;
+  background-position: -72px 0;
+}
+
+.penguin-running-orange {
+  background-image: url("img/sprite-penguin-running.webp");
+  background-size: 108px 25px;
+  background-position: -90px 0;
+}
+
+/* Lying penguin (diving pose): the column index is a CSS variable because
+   the same sprite is shown at three sizes (diving 34x18, available 25x13,
+   trapped 18x9), each with its own background-size/position. The image
+   and column live here; the size/position live on the context rules. */
+.penguin-lying-magenta {
+  --penguin-lying-col: 0;
+  background-image: url("img/sprite-penguin-lying.webp");
+}
+
+.penguin-lying-green {
+  --penguin-lying-col: 1;
+  background-image: url("img/sprite-penguin-lying.webp");
+}
+
+.penguin-lying-blue {
+  --penguin-lying-col: 2;
+  background-image: url("img/sprite-penguin-lying.webp");
+}
+
+.penguin-lying-yellow {
+  --penguin-lying-col: 3;
+  background-image: url("img/sprite-penguin-lying.webp");
+}
+
+.penguin-lying-purple {
+  --penguin-lying-col: 4;
+  background-image: url("img/sprite-penguin-lying.webp");
+}
+
+.penguin-lying-orange {
+  --penguin-lying-col: 5;
+  background-image: url("img/sprite-penguin-lying.webp");
+}
+
 .trapped-penguin-meeple {
-  font-size: 16px;
+  width: 14px;
+  height: 20px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
   animation: dd-shake 0.8s infinite ease-in-out;
+}
+
+/* A trapped sliding penguin is wide and short; keep it small enough for the dock.
+   Lying-penguin sprite at 18x9: the sheet (408x36) displays at 102px x 9px,
+   so each 68px cell shows at 17px wide. */
+.penguin-meeple.trapped-penguin-meeple.penguin-meeple-sliding {
+  width: 18px;
+  height: 9px;
+  background-size: 102px 9px;
+  background-position: calc(var(--penguin-lying-col, 0) * -17px) 0;
 }
 
 /* ========================================================
@@ -478,31 +627,26 @@
    ======================================================== */
 /* ========================================================
    Selectable Tiles (bga-cards setSelectionMode)
-   The selectable class lands on the outer .bga-cards_card; the visible
-   border/glow live on .bga-cards_card-side, so rules target that.
+   The selectable class lands on the outer .bga-cards_card. No outline
+   while diving — the library's dashed orange outline appears only when
+   the player hovers a selectable tile (the current depth's tiles).
    ======================================================== */
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card) .bga-cards_card-side {
-  border-color: #ffd166 !important;
-  box-shadow: 0 0 10px rgba(255, 209, 102, 0.75) !important;
+/* The library draws a 5px dashed orange outline on EVERY selectable card
+   (.card-stock .bga-cards_selectable-card { outline: 5px dashed orange }),
+   so while diving all of the current depth's tiles look highlighted.
+   Suppress it by default, but let the library's dashed outline show on
+   hover — the suppression is scoped to :not(:hover), so hovering a
+   selectable tile restores the 5px dashed orange outline. */
+.bga-cards_selectable-card:not(:hover) {
+  --bga-cards_selectable-card_outline-size: 0;
+  outline: none !important;
+  outline-style: none !important;
+  outline-width: 0 !important;
 }
 
 .dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover {
   transform: translateY(-4px) scale(1.08);
   z-index: 10;
-}
-
-.dd-tile.bga-cards_selectable-card:not(.bga-cards_unselectable-card):hover .bga-cards_card-side {
-  box-shadow: 0 6px 14px rgba(255, 209, 102, 0.9) !important;
-}
-
-.dd-tile.clickable-flip .bga-cards_card-side {
-  border-color: #00f0ff !important;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.8) !important;
-}
-
-.dd-tile.clickable-take .bga-cards_card-side {
-  border-color: #2ec4b6 !important;
-  box-shadow: 0 0 12px rgba(46, 196, 182, 0.8) !important;
 }
 
 @keyframes dd-waddle {
@@ -534,6 +678,21 @@
     transform: translateX(2px);
   }
 }
+/* ========================================================
+   Player Area (left rail on wide screens)
+   ======================================================== */
+#dd-players-area {
+  flex: 0 0 340px;
+}
+
+#dd-players-area #dd-tableaus-container {
+  flex-direction: column;
+}
+
+#dd-players-area .dd-player-tableau {
+  flex: 0 0 auto;
+}
+
 /* ========================================================
    Player Tableaus
    ======================================================== */
@@ -578,27 +737,6 @@
   font-weight: 700;
 }
 
-.dd-tableau-columns-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 800;
-  padding: 4px 0;
-  margin-bottom: 6px;
-  border-radius: 6px;
-  background: #edf2f7;
-}
-.dd-tableau-columns-header .pink-col {
-  color: #c9184a;
-}
-.dd-tableau-columns-header .green-col {
-  color: #2d6a4f;
-}
-.dd-tableau-columns-header .yellow-col {
-  color: #b07d12;
-}
-
 .dd-tableau-rows {
   display: flex;
   flex-direction: column;
@@ -606,33 +744,36 @@
 }
 
 .dd-tableau-row {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 6px 8px;
-  background: #fafafa;
-  transition: all 0.2s;
-}
-.dd-tableau-row.row-complete {
-  background: #f0fdf4;
-  border-color: #86efac;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.15);
-}
-
-.dd-row-header {
   display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 700;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 68px;
+  padding: 0;
+}
+.dd-tableau-row.row-complete .dd-row-score-value {
+  color: #15803d;
+}
+.dd-tableau-row.row-incomplete .dd-row-score-value {
   color: #64748b;
-  margin-bottom: 4px;
 }
 
-.dd-row-score-badge {
-  background: #0b2545;
-  color: #fff;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
+.dd-row-equals {
+  font-size: 28px;
+  font-weight: 900;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+/* Set point value, as large as the tile itself (68px tall). No "pts" or
+   "(1/2)" label — when the set is not full the value is halved and the
+   reason lives in the title tooltip (set in the TS). */
+.dd-row-score-value {
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 68px;
+  min-width: 44px;
+  text-align: center;
 }
 
 .dd-row-slots {
@@ -650,19 +791,6 @@
   justify-content: center;
   border: 1px dashed #cbd5e1;
   background: rgba(0, 0, 0, 0.02);
-}
-.dd-slot[data-slot-id=pink]:empty::after {
-  content: "🦐";
-}
-.dd-slot[data-slot-id=green]:empty::after {
-  content: "🐟";
-}
-.dd-slot[data-slot-id=yellow]:empty::after {
-  content: "🦑";
-}
-.dd-slot:empty::after {
-  font-size: 20px;
-  opacity: 0.35;
 }
 
 /* Anchor for a player's rock VoidStock: zero-size, so collected rocks
@@ -697,4 +825,25 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 3px;
+}
+
+/* ========================================================
+   Responsive: stack below ~phone landscape width (900px)
+   Tableau moves to the top, ocean board below it.
+   ======================================================== */
+@media (max-width: 900px) {
+  #dd-main-layout {
+    flex-direction: column;
+  }
+  #dd-players-area {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  #dd-players-area #dd-tableaus-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  #dd-players-area .dd-player-tableau {
+    flex: 1 1 320px;
+  }
 }

@@ -39,12 +39,10 @@ class ConfirmFlipOrDive {
         this.args = args;
         this.game.setActiveDepth(args.currentDepth);
         if (isCurrentPlayerActive && args.flippedTile) {
-            const tile = args.flippedTile;
-            const tileDesc = this.game.getTileDescription(tile);
             // Resurface button
-            this.bga.statusBar.addActionButton(_(`Resurface with ${tileDesc}`), () => this.game.performKeepFlipped(), { color: 'primary' });
+            this.bga.statusBar.addActionButton(_(`Resurface`), () => this.game.performKeepFlipped(), { color: 'primary' });
             // Dive deeper button
-            this.bga.statusBar.addActionButton(_(`Leave faceup & Dive to Depth ${args.nextDepth} ⬇️`), () => this.game.performDiveDeeper(), { color: 'secondary' });
+            this.bga.statusBar.addActionButton(_(`Dive deeper`), () => this.game.performDiveDeeper(), { color: 'secondary' });
             this.game.setConfirmFlipInteractivity(args);
         }
         else {
@@ -162,20 +160,15 @@ class OceanTileManager extends BgaCards.Manager {
 /** Face classes for a tile's front side (food colour / rock / open water / predator). */
 function tileFaceClasses(tile) {
     const cat = tile.category || 'open_water';
-    let classes = `tile-faceup tile-${cat}`;
-    if (cat === 'food') {
-        classes += ` food-${tile.foodColor || 'pink'}`;
-    }
-    return classes;
+    // Front background is driven by depth (depth-front-N), not by category
+    // or food color; the food color shows on the animal itself instead.
+    return `tile-faceup tile-${cat} depth-front-${tile.depth}`;
 }
 /** Inner HTML of a facedown tile's back side. */
 function renderTileBackInnerHtml(tile) {
-    return `
-        <div class="tile-back-inner">
-            <span class="tile-depth-num">${tile.depth}</span>
-            <span class="tile-wave-pattern">〰️</span>
-        </div>
-    `;
+    // The wave texture is the back's background image (see Game.scss
+    // .tile-facedown::before); no inner content needed.
+    return `<div class="tile-back-inner"></div>`;
 }
 /** Inner HTML of a faceup tile's front side. */
 function renderTileFrontInnerHtml(tile) {
@@ -183,31 +176,40 @@ function renderTileFrontInnerHtml(tile) {
     let innerHtml = '';
     if (cat === 'food') {
         const color = tile.foodColor || 'pink';
-        const foodIcons = { pink: '🦐', green: '🐟', yellow: '🦑' };
-        const icon = foodIcons[color] || '🐟';
+        // Animal by depth, in its food color: rulebook art
+        // (img/animal-{species}-{color}.webp).
+        const speciesByDepth = {
+            1: 'shrimp',
+            2: 'crab',
+            3: 'school',
+            4: 'fish',
+            5: 'squid',
+        };
+        const species = speciesByDepth[tile.depth] || 'fish';
         innerHtml = `
-            <div class="tile-food-icon">${icon}</div>
+            <div class="tile-animal-img animal-${species}-${color}"></div>
             <div class="tile-points-badge">${tile.points}</div>
-            <div class="tile-color-tag">${color.toUpperCase()}</div>
         `;
     }
     else if (cat === 'rock') {
         innerHtml = `
-            <div class="tile-icon">🪨</div>
-            <div class="tile-label">${_('ROCK')}</div>
+            <div class="tile-animal-img tile-rock-img"></div>
         `;
     }
     else if (cat === 'open_water') {
         innerHtml = `
-            <div class="tile-icon">🌊</div>
-            <div class="tile-label">${_('OPEN WATER')}</div>
-            <div class="tile-sublabel">${_('Dive Deeper')}</div>
+            <div class="tile-animal-img tile-bubbles-img"></div>
         `;
     }
     else if (cat === 'predator') {
+        // Predator animal by depth, rulebook art (img/predator-{animal}-d{N}.webp):
+        // seal D1-D2, killer whale D3-D4, shark D5.
+        const predatorImg = tile.depth === 5 ? 'predator-shark'
+            : tile.depth <= 2 ? `predator-seal-d${tile.depth}`
+                : `predator-orca-d${tile.depth}`;
         innerHtml = `
-            <div class="tile-icon">🦈</div>
-            <div class="tile-label">${_('PREDATOR')}</div>
+            <div class="tile-animal-img ${predatorImg}"></div>
+            <span class="tile-predator-warning" title="${_('Predator')}">⚠️</span>
             <div class="tile-trapped-dock" id="dd-dock-${tile.id}"></div>
         `;
     }
@@ -217,6 +219,61 @@ function renderTileFrontInnerHtml(tile) {
 
 /** Pseudo-player id for the solo AI opponent (no tableau UI). */
 const AI_PLAYER_ID = 9999;
+/** Meeple color name for a player's hex color (gameinfos player_colors).
+ *  Exact match for the 6 meeple colors; otherwise the nearest meeple color
+ *  by RGB distance — older tables keep the default BGA colors, which must
+ *  still map to a meeple instead of falling back to blue. */
+function penguinColorName(colorHex) {
+    const hex = (colorHex || '').toLowerCase().replace(/^#/, '');
+    const exact = {
+        a12167: 'magenta',
+        '6a9f44': 'green',
+        '3e90bc': 'blue',
+        cac42f: 'yellow',
+        '55366f': 'purple',
+        aa4026: 'orange',
+    };
+    if (exact[hex])
+        return exact[hex];
+    if (!/^[0-9a-f]{6}$/.test(hex))
+        return 'blue';
+    const rgb = {
+        magenta: [0xa1, 0x21, 0x67],
+        green: [0x6a, 0x9f, 0x44],
+        blue: [0x3e, 0x90, 0xbc],
+        yellow: [0xca, 0xc4, 0x2f],
+        purple: [0x55, 0x36, 0x6f],
+        orange: [0xaa, 0x40, 0x26],
+    };
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    let best = 'blue';
+    let bestDist = Infinity;
+    for (const [name, [cr, cg, cb]] of Object.entries(rgb)) {
+        const dist = (r - cr) ** 2 + (g - cg) ** 2 + (b - cb) ** 2;
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = name;
+        }
+    }
+    return best;
+}
+/** The three penguin designs, in the order they stay available. */
+const PENGUIN_DESIGN_SUFFIX = ['', '-running', '-lying']; // standing, running, sliding (lying image)
+/** CSS classes for one penguin meeple of a given design (0 standing, 1 running, 2 sliding). */
+function penguinMeepleClasses(playerColorHex, design) {
+    const name = penguinColorName(playerColorHex);
+    const d = Math.min(2, Math.max(0, design));
+    return `penguin-meeple${d === 2 ? ' penguin-meeple-sliding' : ''} penguin${PENGUIN_DESIGN_SUFFIX[d]}-${name}`;
+}
+/** HTML for `count` penguin meeples in the player's color: one of each
+ *  design (standing, running, sliding). When fewer than 3 are available
+ *  the sliding one is gone first (it is the diving penguin), then running. */
+function penguinMeeplesHtml(playerColorHex, count) {
+    const n = Math.max(0, Math.min(3, count));
+    return Array.from({ length: n }, (_, i) => `<span class="${penguinMeepleClasses(playerColorHex, i)}"></span>`).join('');
+}
 class Game {
     constructor(bga) {
         this.oceanStocks = {};
@@ -227,6 +284,8 @@ class Game {
         /** Client-side tableau model: playerId -> rowIdx -> tiles. Mirrors the server rows. */
         this.tableauModel = {};
         this.trappedPenguins = [];
+        /** The player whose penguin is currently diving (hidden from their tableau). */
+        this.divingPlayerId = null;
         /** Resolves once the setup addCards calls have placed every tile. */
         this.stocksReady = Promise.resolve([]);
         /** Bumped by every set/clear interactivity call; stale async applies are ignored. */
@@ -249,6 +308,9 @@ class Game {
         console.log("Starting Deep Dive setup", gamedatas);
         this.gamedatas = gamedatas;
         this.trappedPenguins = [...(gamedatas.trappedPenguins || [])];
+        // The active player's penguin is diving from the start of their turn
+        // (hidden from their tableau); setActiveDepth below confirms it.
+        this.divingPlayerId = this.bga.players.getActivePlayerId();
         // Client-side tableau model, built before the board HTML so row
         // shells render with their correct initial scores.
         for (const [pId, tableau] of Object.entries(gamedatas.tableaus || {})) {
@@ -263,29 +325,17 @@ class Game {
         // Build main container (lanes and tableau slots start empty; stocks fill them)
         gameArea.insertAdjacentHTML('beforeend', `
             <div id="dd-container">
-                <div id="dd-header-banner">
-                    <div id="dd-token-container">
-                        <div id="dd-start-token" class="${gamedatas.lastDiveFlipped ? 'last-dive' : 'first-player'}">
-                            <span class="token-side token-front">1st</span>
-                            <span class="token-side token-back">LAST DIVE</span>
-                        </div>
-                    </div>
-                    <div id="dd-status-text">
-                        ${gamedatas.lastDiveFlipped ? _('Last Dive in progress! Each player takes one final turn.') : _('Dive into the depths to catch food sets!')}
-                    </div>
-                </div>
-
                 <div id="dd-main-layout">
-                    <!-- Ocean Board: 5 Depth Rows with horizontal tile lanes -->
-                    <div id="dd-ocean-board">
-                        ${[1, 2, 3, 4, 5].map(d => this.renderDepthRowHtml(d, gamedatas.depths[d])).join('')}
-                    </div>
-
                     <!-- Player Tableaus Area -->
                     <div id="dd-players-area">
                         <div id="dd-tableaus-container">
                             ${Object.keys(gamedatas.players).map(pId => this.renderPlayerTableauHtml(Number(pId))).join('')}
                         </div>
+                    </div>
+
+                    <!-- Ocean Board: 5 Depth Rows with wrapping tile lanes -->
+                    <div id="dd-ocean-board">
+                        ${[1, 2, 3, 4, 5].map(d => this.renderDepthRowHtml(d, gamedatas.depths[d])).join('')}
                     </div>
                 </div>
             </div>
@@ -299,7 +349,7 @@ class Game {
                 panel.insertAdjacentHTML('beforeend', `
                     <div class="dd-player-panel-extra" id="dd-panel-extra-${playerId}">
                         <div class="dd-panel-row">
-                            <span class="dd-icon-penguin" title="${_('Available Penguins')}">🐧 <strong id="dd-panel-penguins-${playerId}">${tableau ? tableau.availablePenguinsCount : 3}</strong>/3</span>
+                            <span class="dd-icon-penguin" title="${_('Available Penguins')}"><span id="dd-panel-penguins-${playerId}">${penguinMeeplesHtml(player.color, this.availablePenguinCount(playerId))}</span></span>
                             <span class="dd-icon-rock" title="${_('Held Rocks')}">🪨 <strong id="dd-panel-rocks-${playerId}">${tableau ? tableau.rockCount : 0}</strong></span>
                         </div>
                         <div class="dd-panel-row">
@@ -337,7 +387,7 @@ class Game {
             if (!lane)
                 continue;
             const stock = new BgaCards.LineStock(this.tileManager, lane, {
-                wrap: 'nowrap',
+                wrap: 'wrap',
                 center: false,
                 gap: '8px',
             });
@@ -383,11 +433,11 @@ class Game {
     //// HTML Rendering Helpers
     renderDepthRowHtml(depth, depthData) {
         const depthNames = [
-            _('Depth 1 — Sunlight Zone (1–2 pts)'),
-            _('Depth 2 — Twilight Zone (2–4 pts)'),
-            _('Depth 3 — Midnight Zone (3–5 pts)'),
-            _('Depth 4 — Abyssal Zone (5–7 pts)'),
-            _('Depth 5 — Hadal Trench (8–10 pts)'),
+            _('Sunlight Zone'),
+            _('Twilight Zone'),
+            _('Midnight Zone'),
+            _('Abyssal Zone'),
+            _('Hadal Trench'),
         ];
         const isExhausted = depthData ? depthData.facedownCount === 0 : false;
         return `
@@ -395,7 +445,6 @@ class Game {
                 <div class="dd-depth-header">
                     <span class="dd-depth-badge">D${depth}</span>
                     <span class="dd-depth-title">${depthNames[depth - 1]}</span>
-                    <span class="dd-depth-count-badge">${_('Facedown')}: <strong id="dd-facedown-count-${depth}">${depthData ? depthData.facedownCount : 0}</strong></span>
                     <div class="dd-depth-penguins" id="dd-depth-penguins-${depth}"></div>
                     <span class="dd-depth-exhausted-badge">${_('Exhausted — Skippable')}</span>
                 </div>
@@ -407,13 +456,13 @@ class Game {
         const tiles = this.tableauModel[playerId]?.[rowIdx] || [];
         const sum = tiles.reduce((s, t) => s + (t.points || 0), 0);
         const isComplete = tiles.length === 3;
+        const value = isComplete ? sum : Math.floor(sum / 2);
+        const tooltip = isComplete ? '' : ` title="${_('Points halved — set not full')}: ${sum} ÷ 2 = ${value}"`;
         return `
             <div class="dd-tableau-row ${isComplete ? 'row-complete' : 'row-incomplete'}" id="dd-row-${playerId}-${rowIdx}">
-                <div class="dd-row-header">
-                    <span class="dd-row-label">${_('Set')} ${rowIdx}</span>
-                    <span class="dd-row-score-badge">${isComplete ? `${sum} pts` : `${Math.floor(sum / 2)} pts (½)`}</span>
-                </div>
                 <div class="dd-row-slots"></div>
+                <span class="dd-row-equals">=</span>
+                <span class="dd-row-score-value"${tooltip}>${value}</span>
             </div>
         `;
     }
@@ -436,16 +485,11 @@ class Game {
                 <div class="dd-tableau-header">
                     <span class="dd-player-name" style="color: #${player.color}; font-weight: bold;">${player.name}</span>
                     <div class="dd-tableau-stats">
-                        <span class="dd-stat-penguins" title="${_('Available Penguins')}">🐧 <span id="dd-avail-penguins-${playerId}">${tableau ? tableau.availablePenguinsCount : 3}</span>/3</span>
+                        <span class="dd-stat-penguins" title="${_('Available Penguins')}"><span id="dd-avail-penguins-${playerId}">${penguinMeeplesHtml(player.color, this.availablePenguinCount(playerId))}</span></span>
                         <span class="dd-stat-rocks" title="${_('Held Rocks')}">🪨 <span id="dd-held-rocks-${playerId}">${tableau ? tableau.rockCount : 0}</span></span>
                         <span class="dd-rock-stock-anchor" id="dd-rock-stock-${playerId}"></span>
                         <span class="dd-stat-score" title="${_('Total Points')}">⭐ <span id="dd-total-score-${playerId}">${tableau ? tableau.score : 0}</span> pts</span>
                     </div>
-                </div>
-                <div class="dd-tableau-columns-header">
-                    <span class="col-title pink-col">${_('Pink 🦐')}</span>
-                    <span class="col-title green-col">${_('Green 🐟')}</span>
-                    <span class="col-title yellow-col">${_('Yellow 🦑')}</span>
                 </div>
                 <div class="dd-tableau-rows" id="dd-tableau-rows-${playerId}">
                     ${rowsHtml}
@@ -508,18 +552,24 @@ class Game {
                 fn();
         });
     }
-    /** Recompute one tableau row's badge/complete state and the player's totals. */
+    /** Recompute one tableau row's value/complete state and the player's totals. */
     updateTableauRowDisplay(playerId, rowIdx) {
         const tiles = this.tableauModel[playerId]?.[rowIdx] || [];
         const sum = tiles.reduce((s, t) => s + (t.points || 0), 0);
         const complete = tiles.length === 3;
+        const value = complete ? sum : Math.floor(sum / 2);
         const rowEl = document.getElementById(`dd-row-${playerId}-${rowIdx}`);
         if (rowEl) {
             rowEl.classList.toggle('row-complete', complete);
             rowEl.classList.toggle('row-incomplete', !complete);
-            const badge = rowEl.querySelector('.dd-row-score-badge');
-            if (badge)
-                badge.textContent = complete ? `${sum} pts` : `${Math.floor(sum / 2)} pts (½)`;
+            const valueEl = rowEl.querySelector('.dd-row-score-value');
+            if (valueEl) {
+                valueEl.textContent = String(value);
+                if (complete)
+                    valueEl.removeAttribute('title');
+                else
+                    valueEl.setAttribute('title', `${_('Points halved — set not full')}: ${sum} ÷ 2 = ${value}`);
+            }
         }
         let total = 0;
         let sets = 0;
@@ -558,12 +608,27 @@ class Game {
         if (target) {
             target.classList.add('active-depth');
         }
-        // Update diving penguin marker
-        document.querySelectorAll('.dd-depth-penguins').forEach(el => el.innerHTML = '');
+        // The active player's penguin is diving (hidden from their tableau).
+        this.setDivingPlayer(this.bga.players.getActivePlayerId());
+        // Update diving penguin marker: the lying meeple in the diving
+        // player's color (replaces the 🐧 emoji), waddle animation kept.
+        document.querySelectorAll('.dd-diving-penguin').forEach(el => el.remove());
         const activePenguinSlot = document.getElementById(`dd-depth-penguins-${depth}`);
         if (activePenguinSlot) {
-            activePenguinSlot.innerHTML = `<span class="dd-diving-penguin" title="${_('Diving Penguin')}">🐧</span>`;
+            const divingId = this.divingPlayerId;
+            const player = divingId !== null ? this.gamedatas.players[divingId] : null;
+            const colorName = player ? penguinColorName(player.color) : 'blue';
+            activePenguinSlot.innerHTML = `<span class="dd-diving-penguin penguin-lying-${colorName}" title="${_('Diving Penguin')}"></span>`;
         }
+    }
+    /** Move the diving penguin marker onto the selected tile's center-bottom. */
+    moveDivingPenguinToTile(tile) {
+        const marker = document.querySelector('.dd-diving-penguin');
+        const el = this.tileManager.getCardElement(tile);
+        if (!marker || !el)
+            return;
+        marker.classList.add('dd-on-tile');
+        el.appendChild(marker);
     }
     setDiveStepInteractivity(args) {
         this.clearInteractivity();
@@ -572,10 +637,14 @@ class Game {
         this.oceanClickHandler = (tile) => {
             if (token !== this.interactivityToken)
                 return;
-            if (args.facedownIds.includes(tile.id))
+            if (args.facedownIds.includes(tile.id)) {
+                this.moveDivingPenguinToTile(tile);
                 this.performFlipTile(tile.id);
-            else if (args.takeableFaceupIds.includes(tile.id))
+            }
+            else if (args.takeableFaceupIds.includes(tile.id)) {
+                this.moveDivingPenguinToTile(tile);
                 this.performTakeFaceup(tile.id);
+            }
         };
         this.applyWhenStocksReady(token, () => {
             const stock = this.oceanStocks[args.currentDepth];
@@ -583,12 +652,6 @@ class Game {
                 return;
             const selectable = stock.getCards().filter(t => selectableIds.has(t.id));
             stock.setSelectionMode('single', selectable);
-            // Keep the old affordance colours: cyan = flip a facedown tile,
-            // teal = take a faceup tile.
-            for (const tile of selectable) {
-                const el = this.tileManager.getCardElement(tile);
-                el.classList.add(args.facedownIds.includes(tile.id) ? 'clickable-flip' : 'clickable-take');
-            }
         });
     }
     setConfirmFlipInteractivity(args) {
@@ -599,8 +662,10 @@ class Game {
             this.oceanClickHandler = (tile) => {
                 if (token !== this.interactivityToken)
                     return;
-                if (tile.id === tileId)
+                if (tile.id === tileId) {
+                    this.moveDivingPenguinToTile(tile);
                     this.performKeepFlipped();
+                }
             };
             this.applyWhenStocksReady(token, () => {
                 const stock = this.oceanStocks[args.currentDepth];
@@ -658,9 +723,9 @@ class Game {
         for (const stock of Object.values(this.oceanStocks)) {
             stock.setSelectionMode('none');
         }
-        document.querySelectorAll('.dd-tile.clickable-flip, .dd-tile.clickable-take').forEach(el => {
-            el.classList.remove('clickable-flip', 'clickable-take');
-        });
+        // A penguin moved onto a tile goes back to the depth header on the
+        // next setActiveDepth; drop it here so it never lingers on a tile.
+        document.querySelectorAll('.dd-tile .dd-diving-penguin').forEach(el => el.remove());
         document.querySelectorAll('.clickable-depth').forEach(el => {
             el.classList.remove('clickable-depth');
             el.onclick = null;
@@ -669,16 +734,51 @@ class Game {
     updateAllTrappedPenguins() {
         // Clear all predator docks
         document.querySelectorAll('.tile-trapped-dock').forEach(el => el.innerHTML = '');
+        // A player's trapped penguins, in the order they left the available
+        // set, are the sliding one first (it did the dive), then running,
+        // then standing — the same order the available display drops them.
+        const trappedIndexByPlayer = new Map();
         for (const tp of this.trappedPenguins) {
             const dock = document.getElementById(`dd-dock-${tp.tileId}`);
             if (dock) {
                 const player = this.gamedatas.players[tp.playerId];
                 const color = player ? player.color : '000000';
+                const idx = trappedIndexByPlayer.get(tp.playerId) ?? 0;
+                trappedIndexByPlayer.set(tp.playerId, idx + 1);
+                const design = Math.max(0, 2 - idx);
                 dock.insertAdjacentHTML('beforeend', `
-                    <span class="trapped-penguin-meeple" style="color: #${color};" title="${player ? player.name : ''}">🐧</span>
+                    <span class="${penguinMeepleClasses(color, design)} trapped-penguin-meeple" title="${player ? player.name : ''}"></span>
                 `);
             }
         }
+    }
+    /** Penguins shown as available: 3 - trapped - (1 while this player's penguin is diving). */
+    availablePenguinCount(playerId) {
+        const trapped = this.trappedPenguins.filter(tp => tp.playerId === playerId).length;
+        return Math.max(0, 3 - trapped - (this.divingPlayerId === playerId ? 1 : 0));
+    }
+    /** Set (or clear) the diving player, refreshing both players' meeple displays. */
+    setDivingPlayer(playerId) {
+        if (this.divingPlayerId === playerId)
+            return;
+        const prev = this.divingPlayerId;
+        this.divingPlayerId = playerId;
+        if (prev !== null)
+            this.updateAvailablePenguins(prev);
+        if (playerId !== null)
+            this.updateAvailablePenguins(playerId);
+    }
+    /** Re-render the available-penguin meeples in the panel and tableau. */
+    updateAvailablePenguins(playerId) {
+        const player = this.gamedatas.players[playerId];
+        const color = player ? player.color : '3e90bc';
+        const html = penguinMeeplesHtml(color, this.availablePenguinCount(playerId));
+        const panelPenguins = document.getElementById(`dd-panel-penguins-${playerId}`);
+        if (panelPenguins)
+            panelPenguins.innerHTML = html;
+        const availPenguins = document.getElementById(`dd-avail-penguins-${playerId}`);
+        if (availPenguins)
+            availPenguins.innerHTML = html;
     }
     ///////////////////////////////////////////////////
     //// Actions to Server
@@ -798,13 +898,8 @@ class Game {
     }
     notif_tileFlipped(notif) {
         const args = this.getNotifArgs(notif);
-        const { tile, depth, facedownRemaining } = args;
+        const { tile } = args;
         void this.stocksReady.then(() => {
-            // Update facedown counter
-            const countBadge = document.getElementById(`dd-facedown-count-${depth}`);
-            if (countBadge) {
-                countBadge.innerText = `${facedownRemaining}`;
-            }
             // Flip the tile in its ocean stock (re-runs setupFrontDiv, so the
             // predator dock is recreated empty and must be re-rendered).
             const regTile = this.mergeTile(tile);
@@ -823,33 +918,25 @@ class Game {
     }
     notif_predatorTrapped(notif) {
         const args = this.getNotifArgs(notif);
-        const { player_id, tileId, trappedTotal, depth } = args;
+        const { player_id, tileId, depth } = args;
         if (!this.trappedPenguins.some(tp => tp.tileId === tileId && tp.playerId === player_id)) {
             this.trappedPenguins.push({ id: tileId, playerId: player_id, tileId, depth });
         }
         // Docks live inside predator front divs; re-render once stocks exist.
         void this.stocksReady.then(() => this.updateAllTrappedPenguins());
-        // Update available penguins in panel & tableau
-        const avail = Math.max(0, 3 - trappedTotal);
-        const panelPenguins = document.getElementById(`dd-panel-penguins-${player_id}`);
-        if (panelPenguins)
-            panelPenguins.innerText = `${avail}`;
-        const availPenguins = document.getElementById(`dd-avail-penguins-${player_id}`);
-        if (availPenguins)
-            availPenguins.innerText = `${avail}`;
+        // The diving penguin is now trapped (no longer diving); update the
+        // available penguins in panel & tableau.
+        this.setDivingPlayer(null);
+        this.updateAvailablePenguins(player_id);
     }
     notif_penguinRetreat(notif) {
         const args = this.getNotifArgs(notif);
         const { player_id, rescuedTile } = args;
-        // Reset penguin count to 3
-        const panelPenguins = document.getElementById(`dd-panel-penguins-${player_id}`);
-        if (panelPenguins)
-            panelPenguins.innerText = `3`;
-        const availPenguins = document.getElementById(`dd-avail-penguins-${player_id}`);
-        if (availPenguins)
-            availPenguins.innerText = `3`;
-        // All of this player's trapped penguins are freed; docks clear.
+        // All of this player's trapped penguins are freed and the diving
+        // penguin is back — restore the available-penguin display.
         this.trappedPenguins = this.trappedPenguins.filter(tp => tp.playerId !== player_id);
+        this.setDivingPlayer(null);
+        this.updateAvailablePenguins(player_id);
         void this.stocksReady.then(() => {
             this.updateAllTrappedPenguins();
             if (rescuedTile) {
@@ -869,17 +956,6 @@ class Game {
         const depthRow = document.getElementById(`dd-depth-${depth}`);
         if (depthRow) {
             depthRow.classList.add('depth-exhausted');
-        }
-    }
-    notif_lastDiveFlipped(notif) {
-        const token = document.getElementById('dd-start-token');
-        if (token) {
-            token.classList.remove('first-player');
-            token.classList.add('last-dive', 'token-flip-animation');
-        }
-        const statusText = document.getElementById('dd-status-text');
-        if (statusText) {
-            statusText.innerText = _('Last Dive in progress! Each player takes one final turn.');
         }
     }
 }
