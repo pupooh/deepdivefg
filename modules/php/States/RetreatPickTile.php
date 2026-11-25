@@ -10,8 +10,7 @@ use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
+use Bga\Games\DeepDiveFG\OceanTiles as OT;
 
 class RetreatPickTile extends GameState
 {
@@ -37,8 +36,8 @@ class RetreatPickTile extends GameState
 
         return [
             'trappedDepths' => array_values($trappedDepths),
-            'eligibleTileIds' => array_map(fn(OceanTile $t) => $t->id, $eligibleTiles),
-            'eligibleTiles' => array_map(fn(OceanTile $t) => $t->toArray(), $eligibleTiles),
+            'eligibleTileIds' => array_map(fn(OT\OceanTile $t) => $t->id, $eligibleTiles),
+            'eligibleTiles' => array_map(fn(OT\OceanTile $t) => $t->toArray(), $eligibleTiles),
         ];
     }
 
@@ -95,11 +94,11 @@ class RetreatPickTile extends GameState
         return $this->actRetreatEmpty($playerId);
     }
 
-    private function getTileDescription(OceanTile $tile): string
+    private function getTileDescription(OT\OceanTile $tile): string
     {
         return match ($tile->category) {
-            OceanTileCategory::ROCK => clienttranslate('Rock'),
-            OceanTileCategory::FOOD => sprintf(
+            OT\OceanTileCategory::ROCK => clienttranslate('Rock'),
+            OT\OceanTileCategory::FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
                 ucfirst((string) $tile->foodColor),
                 (int) $tile->points

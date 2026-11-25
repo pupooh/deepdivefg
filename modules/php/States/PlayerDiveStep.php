@@ -10,9 +10,7 @@ use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
+use Bga\Games\DeepDiveFG\OceanTiles as OT;
 
 class PlayerDiveStep extends GameState
 {
@@ -39,11 +37,11 @@ class PlayerDiveStep extends GameState
         $canSkip = $this->game->canPlayerSkipDepth($activePlayerId, $currentDepth);
 
         $facedownIds = array_map(
-            fn(OceanTile $t) => $t->id,
+            fn(OT\OceanTile $t) => $t->id,
             $this->game->tileManager->getFacedownTilesAtDepth($currentDepth),
         );
         $takeableFaceupIds = array_map(
-            fn(OceanTile $t) => $t->id,
+            fn(OT\OceanTile $t) => $t->id,
             $this->game->tileManager->getTakeableTilesAtDepth($currentDepth),
         );
 
@@ -77,7 +75,7 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile->location !== OceanTileLocation::OCEAN || $tile->depth !== $currentDepth || $tile->isFaceup) {
+        if ($tile->location !== OT\OceanTileLocation::OCEAN || $tile->depth !== $currentDepth || $tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be flipped at the current depth'));
         }
 
@@ -110,7 +108,7 @@ class PlayerDiveStep extends GameState
         // Handle category
         $category = $revealedTile->category;
 
-        if ($category === OceanTileCategory::OPEN_WATER) {
+        if ($category === OT\OceanTileCategory::OPEN_WATER) {
             $nextDepth = $currentDepth + 1;
             $this->globals->set('currentDepth', $nextDepth);
             $this->notify->all('penguinMovedDepth', clienttranslate('${player_name} dives to Depth ${depth} via Open Water!'), [
@@ -126,7 +124,7 @@ class PlayerDiveStep extends GameState
             } else {
                 return NextPlayer::class;
             }
-        } elseif ($category === OceanTileCategory::FOOD || $category === OceanTileCategory::ROCK) {
+        } elseif ($category === OT\OceanTileCategory::FOOD || $category === OT\OceanTileCategory::ROCK) {
             if ($currentDepth === 5) {
                 // Auto-collect at depth 5
                 $collected = $this->game->collectTileForPlayer($tileId, $activePlayerId);
@@ -148,7 +146,7 @@ class PlayerDiveStep extends GameState
                 $this->globals->set('flippedTileId', $tileId);
                 return ConfirmFlipOrDive::class;
             }
-        } elseif ($category === OceanTileCategory::PREDATOR) {
+        } elseif ($category === OT\OceanTileCategory::PREDATOR) {
             $this->playerStats->inc('predators_hit', 1, $activePlayerId);
             $trappedTotal = $this->game->trapPenguin($activePlayerId, $tileId);
 
@@ -198,10 +196,10 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile->location !== OceanTileLocation::OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
+        if ($tile->location !== OT\OceanTileLocation::OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be taken'));
         }
-        if (!in_array($tile->category, [OceanTileCategory::FOOD, OceanTileCategory::ROCK])) {
+        if (!in_array($tile->category, [OT\OceanTileCategory::FOOD, OT\OceanTileCategory::ROCK])) {
             throw new UserException(clienttranslate('Only Food or Rock tiles can be taken'));
         }
 
@@ -294,13 +292,13 @@ class PlayerDiveStep extends GameState
         return NextPlayer::class;
     }
 
-    private function getTileDescription(OceanTile $tile): string
+    private function getTileDescription(OT\OceanTile $tile): string
     {
         return match ($tile->category) {
-            OceanTileCategory::OPEN_WATER => clienttranslate('Open Water'),
-            OceanTileCategory::ROCK => clienttranslate('Rock'),
-            OceanTileCategory::PREDATOR => clienttranslate('Predator'),
-            OceanTileCategory::FOOD => sprintf(
+            OT\OceanTileCategory::OPEN_WATER => clienttranslate('Open Water'),
+            OT\OceanTileCategory::ROCK => clienttranslate('Rock'),
+            OT\OceanTileCategory::PREDATOR => clienttranslate('Predator'),
+            OT\OceanTileCategory::FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
                 ucfirst((string) $tile->foodColor),
                 (int) $tile->points

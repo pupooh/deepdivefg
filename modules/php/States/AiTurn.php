@@ -7,10 +7,7 @@ namespace Bga\Games\DeepDiveFG\States;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileColor;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
+use Bga\Games\DeepDiveFG\OceanTiles as OT;
 
 class AiTurn extends GameState
 {
@@ -43,7 +40,7 @@ class AiTurn extends GameState
 
         // Get facedown tiles at targetDepth
         $facedownTiles = $this->game->tileManager->getFacedownTilesAtDepth($targetDepth);
-        $facedownIds = array_map(fn(OceanTile $t) => $t->id, $facedownTiles);
+        $facedownIds = array_map(fn(OT\OceanTile $t) => $t->id, $facedownTiles);
 
         if (empty($facedownIds)) {
             // No facedown tiles anywhere!
@@ -84,25 +81,25 @@ class AiTurn extends GameState
 
         $category = $tile->category;
 
-        if ($category === OceanTileCategory::PREDATOR) {
+        if ($category === OT\OceanTileCategory::PREDATOR) {
             // AI leaves predator in place and looks for faceup food tiles at targetDepth
             $faceupFood = array_values(array_filter(
                 $this->game->tileManager->getFaceupTilesAtDepth($targetDepth),
-                fn(OceanTile $t) => $t->category === OceanTileCategory::FOOD,
+                fn(OT\OceanTile $t) => $t->category === OT\OceanTileCategory::FOOD,
             ));
 
             if (!empty($faceupFood)) {
                 // Determine AI color counts
                 $aiFoodCounts = [
-                    OceanTileColor::PINK => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, OceanTileCategory::FOOD, OceanTileColor::PINK),
-                    OceanTileColor::GREEN => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, OceanTileCategory::FOOD, OceanTileColor::GREEN),
-                    OceanTileColor::YELLOW => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OceanTileLocation::TABLEAU, OceanTileCategory::FOOD, OceanTileColor::YELLOW),
+                    OT\OceanTileColor::PINK => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OT\OceanTileLocation::TABLEAU, OT\OceanTileCategory::FOOD, OT\OceanTileColor::PINK),
+                    OT\OceanTileColor::GREEN => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OT\OceanTileLocation::TABLEAU, OT\OceanTileCategory::FOOD, OT\OceanTileColor::GREEN),
+                    OT\OceanTileColor::YELLOW => $this->game->tileManager->countPlayerTiles(self::AI_PLAYER_ID, OT\OceanTileLocation::TABLEAU, OT\OceanTileCategory::FOOD, OT\OceanTileColor::YELLOW),
                 ];
 
                 // Sort candidates:
                 // 1) Fewest color in AI tableau
                 // 2) Highest points
-                usort($faceupFood, function (OceanTile $a, OceanTile $b) use ($aiFoodCounts) {
+                usort($faceupFood, function (OT\OceanTile $a, OT\OceanTile $b) use ($aiFoodCounts) {
                     $cntA = $aiFoodCounts[$a->foodColor];
                     $cntB = $aiFoodCounts[$b->foodColor];
                     if ($cntA !== $cntB) {
@@ -113,14 +110,14 @@ class AiTurn extends GameState
 
                 // Check if top candidates tie
                 $best = $faceupFood[0];
-                $tied = array_filter($faceupFood, function (OceanTile $item) use ($best, $aiFoodCounts) {
+                $tied = array_filter($faceupFood, function (OT\OceanTile $item) use ($best, $aiFoodCounts) {
                     return $aiFoodCounts[$item->foodColor] === $aiFoodCounts[$best->foodColor]
                         && (int) $item->points === (int) $best->points;
                 });
 
                 if (count($tied) > 1) {
                     // Tiebreak required by human player
-                    $this->globals->set('soloTiebreakCandidateIds', array_map(fn(OceanTile $t) => $t->id, array_values($tied)));
+                    $this->globals->set('soloTiebreakCandidateIds', array_map(fn(OT\OceanTile $t) => $t->id, array_values($tied)));
                     return SoloChooseTiebreak::class;
                 } else {
                     $collected = $this->game->collectTileForPlayer((int) $best->id, self::AI_PLAYER_ID);
@@ -143,12 +140,12 @@ class AiTurn extends GameState
         } else {
             // Food, Rock, or Open Water: AI collects it!
             $loc = match ($category) {
-                OceanTileCategory::ROCK => OceanTileLocation::ROCK,
-                OceanTileCategory::FOOD => OceanTileLocation::TABLEAU,
-                default => OceanTileLocation::TABLEAU,
+                OT\OceanTileCategory::ROCK => OT\OceanTileLocation::ROCK,
+                OT\OceanTileCategory::FOOD => OT\OceanTileLocation::TABLEAU,
+                default => OT\OceanTileLocation::TABLEAU,
             };
             $collected = null;
-            if ($category === OceanTileCategory::FOOD) {
+            if ($category === OT\OceanTileCategory::FOOD) {
                 $collected = $this->game->collectTileForPlayer($tileId, self::AI_PLAYER_ID);
             } else {
                 $this->game->tileManager->moveTileToPlayerLocation($tile, $loc, self::AI_PLAYER_ID);
@@ -173,13 +170,13 @@ class AiTurn extends GameState
         return NextPlayer::class;
     }
 
-    private function getTileDescription(OceanTile $tile): string
+    private function getTileDescription(OT\OceanTile $tile): string
     {
         return match ($tile->category) {
-            OceanTileCategory::OPEN_WATER => clienttranslate('Open Water'),
-            OceanTileCategory::ROCK => clienttranslate('Rock'),
-            OceanTileCategory::PREDATOR => clienttranslate('Predator'),
-            OceanTileCategory::FOOD => sprintf(
+            OT\OceanTileCategory::OPEN_WATER => clienttranslate('Open Water'),
+            OT\OceanTileCategory::ROCK => clienttranslate('Rock'),
+            OT\OceanTileCategory::PREDATOR => clienttranslate('Predator'),
+            OT\OceanTileCategory::FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
                 ucfirst((string) $tile->foodColor),
                 (int) $tile->points

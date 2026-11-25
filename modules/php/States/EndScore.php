@@ -7,8 +7,7 @@ namespace Bga\Games\DeepDiveFG\States;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
+use Bga\Games\DeepDiveFG\OceanTiles as OT;
 
 const ST_END_GAME = 99;
 
@@ -34,11 +33,11 @@ class EndScore extends GameState
         if ($isSoloMode) {
             $difficulty = (int) $this->globals->get('soloDifficulty', 1);
             $aiScoreData = $this->game->computePlayerScore(AiTurn::AI_PLAYER_ID);
-            $aiRockCount = $this->game->tileManager->countPlayerTiles(AiTurn::AI_PLAYER_ID, OceanTileLocation::ROCK);
+            $aiRockCount = $this->game->tileManager->countPlayerTiles(AiTurn::AI_PLAYER_ID, OT\OceanTileLocation::ROCK);
             $aiOpenWaterCount = $this->game->tileManager->countPlayerTiles(
                 AiTurn::AI_PLAYER_ID,
-                OceanTileLocation::TABLEAU,
-                OceanTileCategory::OPEN_WATER,
+                OT\OceanTileLocation::TABLEAU,
+                OT\OceanTileCategory::OPEN_WATER,
             );
 
             $aiTotalScore = 0;

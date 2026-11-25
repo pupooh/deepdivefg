@@ -10,7 +10,7 @@ use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles as OT;
 
 class SoloChooseTiebreak extends GameState
 {
@@ -33,7 +33,7 @@ class SoloChooseTiebreak extends GameState
         $candidateTiles = [];
         if (!empty($candidateIds)) {
             $candidateTiles = array_map(
-                fn(OceanTile $t) => [
+                fn(OT\OceanTile $t) => [
                     'id' => $t->id,
                     'depth' => $t->depth,
                     'category' => $t->category,

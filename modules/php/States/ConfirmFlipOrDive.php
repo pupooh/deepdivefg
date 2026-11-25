@@ -9,8 +9,7 @@ use Bga\GameFramework\States\GameState;
 use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
-use Bga\Games\DeepDiveFG\OceanTiles\OceanTileCategory;
+use Bga\Games\DeepDiveFG\OceanTiles as OT;
 
 class ConfirmFlipOrDive extends GameState
 {
@@ -98,11 +97,11 @@ class ConfirmFlipOrDive extends GameState
         return $this->actKeepFlipped($playerId);
     }
 
-    private function getTileDescription(OceanTile $tile): string
+    private function getTileDescription(OT\OceanTile $tile): string
     {
         return match ($tile->category) {
-            OceanTileCategory::ROCK => clienttranslate('Rock'),
-            OceanTileCategory::FOOD => sprintf(
+            OT\OceanTileCategory::ROCK => clienttranslate('Rock'),
+            OT\OceanTileCategory::FOOD => sprintf(
                 clienttranslate('%s Food (%d pts)'),
                 ucfirst((string) $tile->foodColor),
                 (int) $tile->points
