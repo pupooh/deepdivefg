@@ -11,6 +11,7 @@ use Bga\GameFramework\Actions\Types\IntParam;
 use Bga\GameFramework\UserException;
 use Bga\Games\DeepDiveFG\Game;
 use Bga\Games\DeepDiveFG\OceanTiles\OceanTile;
+use Bga\Games\DeepDiveFG\OceanTiles\OceanTileLocation;
 
 class PlayerDiveStep extends GameState
 {
@@ -75,7 +76,7 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile->location !== OceanTile::LOCATION_OCEAN || $tile->depth !== $currentDepth || $tile->isFaceup) {
+        if ($tile->location !== OceanTileLocation::LOCATION_OCEAN || $tile->depth !== $currentDepth || $tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be flipped at the current depth'));
         }
 
@@ -196,7 +197,7 @@ class PlayerDiveStep extends GameState
         if (!$tile) {
             throw new UserException(clienttranslate('Tile not found'));
         }
-        if ($tile->location !== OceanTile::LOCATION_OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
+        if ($tile->location !== OceanTileLocation::LOCATION_OCEAN || $tile->depth !== $currentDepth || !$tile->isFaceup) {
             throw new UserException(clienttranslate('This tile cannot be taken'));
         }
         if (!in_array($tile->category, [Game::CATEGORY_FOOD, Game::CATEGORY_ROCK])) {

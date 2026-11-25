@@ -7,11 +7,8 @@
  * OceanTile.php
  * Typed ItemManager item for one Deep Dive ocean tile.
  *
- * Locations (first LOCATION field):
- *   'ocean'   — still in the ocean; locationArg is the depth (1..5)
- *   'box'     — removed from play at setup, or a spent Rock Tile; locationArg is null
- *   'tableau' — collected Food / Open Water in a player's tableau; locationArg is the player id
- *   'rock'    — collected Rock Tile in a player's rock reserve; locationArg is the player id
+ * Locations live in OceanTileLocation (first LOCATION field; see
+ * that class for what each location means and what locationArg holds).
  *
  * A trapped Penguin is not a separate table any more: the Predator tile
  * that trapped it carries the trapping player's id in $trappedPlayerId.
@@ -30,11 +27,6 @@ use Bga\GameFramework\Components\ItemManager\ItemFieldKind;
 #[Item(tableName: 'ocean_tile')]
 class OceanTile
 {
-    public const LOCATION_OCEAN = 'ocean';
-    public const LOCATION_BOX = 'box';
-    public const LOCATION_TABLEAU = 'tableau';
-    public const LOCATION_ROCK = 'rock';
-
     #[ItemField(kind: ItemFieldKind::ID)]
     public int $id;
 
